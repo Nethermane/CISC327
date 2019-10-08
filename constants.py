@@ -53,8 +53,10 @@ deposit_over_max = 'Error: deposit over limit'
 withdraw_over_max = 'Error: withdraw over limit'
 from_account_prompt = 'From: '
 to_account_prompt = 'To: '
-
+accounts_file = 'valid_accounts.txt'
 parse_number_error = 'Error parsing input'
+def summary_transaction_file(timestamp, num):
+    return 'new_transactions/summary_transaction'+timestamp+'_'+str(num)+'.txt'
 def successful_login(session_type):
     return 'Successfully logged in as "' + session_type +'"'
 def unrecognized_login_command(command):

@@ -1,9 +1,12 @@
 import constants
 import re
+import os.path
+from os import path
+import datetime
 
 user_status = constants.idle_state
 current_file_output = []
-accounts_list = ['1234567']
+accounts_list = []
 def main():
     print(constants.first_launch_message)
     while True:
@@ -40,7 +43,7 @@ def main():
 
 #TODO: open valid accounts file when login
 def login():
-    global user_status
+    global user_status, accounts_list
     if(user_status != constants.idle_state):
         print(constants.logged_in_login)
         return
@@ -50,10 +53,14 @@ def login():
         if(parsed_login == constants.atm_state):
             user_status = constants.atm_state
             print(constants.successful_login(constants.atm_state))
+            with open(constants.accounts_file) as fp:
+                accounts_list = fp.readlines()
             return
         elif(parsed_login == constants.agent_state):
             user_status = constants.agent_state
             print(constants.successful_login(constants.agent_state))
+            with open(constants.accounts_file) as fp:
+                accounts_list = fp.readlines()
             return
         elif(parsed_login == constants.cancel_command):
             return
@@ -61,7 +68,7 @@ def login():
             user_status = constants.idle_state
             print(constants.unrecognized_login_command(user_input))
 def logout():
-    global user_status
+    global user_status, current_file_output
     if(user_status == constants.idle_state):
         print(constants.logged_out_logout_message)
         return
@@ -74,8 +81,20 @@ def logout():
                             constants.empty_account_name
                             ])
         print(current_file_output)
+        timestamp = str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
+        log_number = 0
+        potential_file = constants.summary_transaction_file(timestamp, log_number)
+        while(True):
+            if(path.exists(potential_file)):
+                log_number +=1
+                continue
+            else:
+                os.makedirs(os.path.dirname(potential_file), exist_ok=True)
+                break
+        with open(potential_file, 'w+') as fp:
+            for transaction in current_file_output:
+                fp.write(' '.join(transaction) + '\n')
         current_file_output = []
-        #TODO: Write to file, currently just prints
         user_status = constants.idle_state
 def create_account():
     global user_status

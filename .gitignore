@@ -2,3 +2,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+#folders created by script
+new_transactions/
