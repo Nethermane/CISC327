@@ -179,7 +179,7 @@ class FrontEndInstance(object):
         if account_name is None:
             return
         self.write_to_transaction_log(self.TransactionSummaryValues.createacct, to=account_number, name=account_name)
-        print(constants.successful_delete)
+        print(constants.successful_create)
 
     def delete_account(self) -> None:
         if self.user_status != self.UserState.agent:
