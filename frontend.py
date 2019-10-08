@@ -50,10 +50,6 @@ class FrontEndInstance(object):
         def __str__(self):
             return self.value
 
-    empty_account_number = '0000000'
-    empty_money_amount = '000'
-    empty_account_name = '***'
-
     PRIVILEGED_COMMANDS = [Commands.createacct, Commands.deleteacct]
     ATM_COMMANDS = [Commands.login, Commands.logout, Commands.deposit, Commands.withdraw, Commands.transfer]
 
