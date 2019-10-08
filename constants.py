@@ -3,7 +3,7 @@ unrecognized_command = 'Error: unrecognized command'
 not_logged_in_message = 'In idle state, please login before use'
 logged_out_logout_message = 'Error not logged in'
 logged_in_login = 'Error: already logged in'
-logout_message = 'Sucessfully logged out'
+logout_message = 'Successfully logged out'
 enter_command_text = 'Command: '
 idle_state = 'idle'
 atm_state = 'atm'
@@ -49,30 +49,25 @@ max_transfer_atm_daily = 1000000
 max_transfer_agent_once = 99999999
 successful_deposit = 'Deposit successful'
 successful_withdraw = 'Withdraw successful'
-successful_delete = 'Delete sucessful'
+successful_delete = 'Delete successful'
 deposit_over_max = 'Error: deposit over limit'
 withdraw_over_max = 'Error: withdraw over limit'
 from_account_prompt = 'From: '
 to_account_prompt = 'To: '
-accounts_file = 'valid_accounts.txt'
 parse_number_error = 'Error parsing input'
 
 
-def summary_transaction_file(timestamp, num):
-    return 'new_transactions/summary_transaction' + timestamp + '_' + str(num) + '.txt'
-
-
-def successful_login(session_type):
+def successful_login(session_type: str):
     return 'Successfully logged in as "' + session_type + '"'
 
 
-def unrecognized_login_command(command):
+def unrecognized_login_command(command: str):
     return 'Error unrecognized command: "' + command + '", login with either ' + atm_state + ' or ' + agent_state
 
 
-def must_be_signed_in_for_command(command):
+def must_be_signed_in_for_command(command: str):
     return 'Command: "' + command + '" requires logged in session'
 
 
-def error_cents_less_than(max_value):
+def error_cents_less_than(max_value: str):
     return 'Error: must be less than or equal to ' + max_value + ' cents'

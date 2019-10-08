@@ -1,16 +1,22 @@
 import constants
 import re
 import os.path
-from os import path
-import datetime
+import sys
 
 user_status = constants.idle_state
 current_file_output = []
 accounts_list = []
 
+accounts_file = None
+transaction_summary_file = None
+
 
 def main():
     print(constants.first_launch_message)
+    front_end_loop()
+
+
+def front_end_loop():
     while True:
         user_command = input(constants.enter_command_text)
         parsed_command = user_command.lower().strip()
@@ -44,7 +50,6 @@ def main():
             print(constants.unrecognized_command)
 
 
-# TODO: open valid accounts file when login
 def login():
     global user_status, accounts_list
     if user_status != constants.idle_state:
@@ -53,16 +58,10 @@ def login():
     while True:
         user_input = input(constants.login_message)
         parsed_login = user_input.lower().strip()
-        if parsed_login == constants.atm_state:
-            user_status = constants.atm_state
-            print(constants.successful_login(constants.atm_state))
-            with open(constants.accounts_file) as fp:
-                accounts_list = fp.readlines()
-            return
-        elif parsed_login == constants.agent_state:
-            user_status = constants.agent_state
-            print(constants.successful_login(constants.agent_state))
-            with open(constants.accounts_file) as fp:
+        if parsed_login in [constants.atm_state, constants.agent_state]:
+            user_status = parsed_login
+            print(constants.successful_login(parsed_login))
+            with open(accounts_file) as fp:
                 accounts_list = fp.readlines()
             return
         elif parsed_login == constants.cancel_command:
@@ -85,18 +84,7 @@ def logout():
                                     constants.empty_account_number,
                                     constants.empty_account_name
                                     ])
-        print(current_file_output)
-        timestamp = str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
-        log_number = 0
-        potential_file = constants.summary_transaction_file(timestamp, log_number)
-        while True:
-            if path.exists(potential_file):
-                log_number += 1
-                continue
-            else:
-                os.makedirs(os.path.dirname(potential_file), True)
-                break
-        with open(potential_file, 'w+') as fp:
+        with open(transaction_summary_file, 'w') as fp:
             for transaction in current_file_output:
                 fp.write(' '.join(transaction) + '\n')
         current_file_output = []
@@ -222,36 +210,31 @@ def transfer():
         print(constants.withdraw_over_max)
 
 
-def valid_account_name(name):
+def valid_account_name(name: str):
     return name is not None and re.search('^[\w][\w ]{1,28}[\w]$', name) is not None
 
 
-def valid_account_number(number):
+def valid_account_number(number: str):
     return number is not None and re.search('^[1-9][0-9]{6}$', number) is not None
 
 
-def valid_cents_amount(number, max_value):
+def valid_cents_amount(number: int, max_value: int):
     return number is not None and number <= max_value
 
 
 # Determines if account has had more than specified limit amount of transactions done to it
-def total_less_than_daily_limit(transaction_type, account_number, limit):
-    if transaction_type == constants.transfer_output_key:
-        return sum(
-            map(lambda row: int(row[2]),
-                filter(lambda row: row[0] == transaction_type and account_number == row[3],
-                       current_file_output))) <= limit
-    else:
-        return sum(
-            map(lambda row: int(row[2]),
-                filter(lambda row: row[0] == transaction_type and account_number == row[1],
-                       current_file_output))) <= limit
+def total_less_than_daily_limit(output_key: str, account_number: str, limit: int):
+    account_num_pos = 3 if output_key in [constants.transfer_output_key, constants.withdraw_output_key] else 1
+    return sum(
+        map(lambda row: int(row[2]),
+            filter(lambda row: row[0] == output_key and account_number == row[account_num_pos],
+                   current_file_output))) <= limit
 
 
 # returns a valid account number from user input
 # If check_accounts_list is True, requires the number to be in the accounts list
 # returns None if exit command is provided
-def get_valid_account_number(check_accounts_list=False, prompt=constants.account_number_input):
+def get_valid_account_number(check_accounts_list: bool=False, prompt:str =constants.account_number_input):
     while True:
         account_number = input(prompt)
         if valid_account_number(account_number):
@@ -281,7 +264,7 @@ def get_valid_account_name():
 # returns a valid cents amount less than or equal to max value
 # returns None if exit command provided
 # returns a string, ensuring it is validly numeric.
-def get_valid_numeric_amount(max_value):
+def get_valid_numeric_amount(max_value: int):
     while True:
         cents = input(constants.cents_value).replace(',', '')
         try:
@@ -297,4 +280,9 @@ def get_valid_numeric_amount(max_value):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print('Invalid usage, must be of the format "frontend accounts_file.txt transaction_summary.txt"')
+        exit(1)
+    accounts_file = os.path.normpath(sys.argv[1])
+    transaction_summary_file = os.path.normpath(sys.argv[2])
     main()
