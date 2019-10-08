@@ -143,18 +143,17 @@ class FrontEndInstance(object):
             user_input = input(self.LOGIN_MESSAGE)
             try:
                 parsed_login = self.UserState(user_input.lower().strip())
+                if parsed_login == self.UserState.atm or parsed_login == self.UserState.agent:
+                    self.user_status = parsed_login
+                    with open(self.accounts_file) as fp:
+                        self.accounts_list = fp.readlines()
+                    print(FrontEndInstance.successful_login(parsed_login))
+                    return
             except ValueError:
                 if user_input == self.Commands.cancel.value:
                     return
                 print(FrontEndInstance.unrecognized_login_command(user_input))
                 continue
-            if parsed_login == self.UserState.atm \
-                    or parsed_login == self.UserState.agent:
-                self.user_status = parsed_login
-                print(FrontEndInstance.successful_login(parsed_login))
-                with open(self.accounts_file) as fp:
-                    self.accounts_list = fp.readlines()
-                return
 
     def logout(self) -> None:
         if self.user_status == self.UserState.idle:
@@ -200,20 +199,23 @@ class FrontEndInstance(object):
             print(FrontEndInstance.must_be_signed_in_for_command(self.Commands.deposit))
             return
         account_number = self.get_account_number_in_list()
-        # Check number less than max single transaction
-        cents = FrontEndInstance.get_valid_numeric_amount(
-            self.MAX_DEPOSIT_ATM_ONCE if self.user_status == self.UserState.atm else self.MAX_DEPOSIT_TELLER_ONCE)
-        if cents is None:
-            return
-        # Check if total deposits that day less than total
-        if (self.user_status == self.UserState.agent or self.total_within_daily_limit(
-                FrontEndInstance.TransactionSummaryValues.deposit,
-                account_number,
-                self.MAX_DEPOSIT_ATM_DAILY)):
-            self.write_to_transaction_log(self.TransactionSummaryValues.withdraw, to=account_number, cents=cents)
-            print(constants.successful_deposit)
-        else:
-            print(constants.error_deposit_over_max)
+        while True:
+            # Check number less than max single transaction
+            cents = FrontEndInstance.get_valid_numeric_amount(
+                self.MAX_DEPOSIT_ATM_ONCE if self.user_status == self.UserState.atm else self.MAX_DEPOSIT_TELLER_ONCE)
+            if cents is None:
+                return
+            # Check if total deposits that day less than total
+            if (self.user_status == self.UserState.agent or self.total_within_daily_limit(
+                    FrontEndInstance.TransactionSummaryValues.deposit,
+                    account_number,
+                    int(cents),
+                    self.MAX_DEPOSIT_ATM_DAILY)):
+                self.write_to_transaction_log(self.TransactionSummaryValues.deposit, to=account_number, cents=cents)
+                print(constants.successful_deposit)
+                return
+            else:
+                print(constants.error_deposit_over_max)
 
     def withdraw(self) -> None:
         if self.user_status == self.UserState.idle:
@@ -230,6 +232,7 @@ class FrontEndInstance(object):
         if (self.user_status == self.UserState.agent or self.total_within_daily_limit(
                 FrontEndInstance.TransactionSummaryValues.withdraw,
                 account_number,
+                int(cents),
                 self.MAX_WITHDRAW_ATM_DAILY)):
             self.write_to_transaction_log(self.TransactionSummaryValues.withdraw, cents=cents, from_act=account_number)
             print(constants.successful_withdraw)
@@ -251,6 +254,7 @@ class FrontEndInstance(object):
         if (self.user_status == self.UserState.agent or self.total_within_daily_limit(
                 FrontEndInstance.TransactionSummaryValues.transfer,
                 from_account,
+                int(cents),
                 self.MAX_TRANSFER_ATM_ONCE)):
             self.write_to_transaction_log(self.TransactionSummaryValues.transfer, to_account, cents, from_account)
             print(constants.successful_withdraw)
@@ -275,13 +279,14 @@ class FrontEndInstance(object):
         return number is not None and number <= max_value
 
     # Determines if account has had more than specified limit amount of transactions done to it
-    def total_within_daily_limit(self, output_key: TransactionSummaryValues, account_number: str, limit: int) -> bool:
+    def total_within_daily_limit(self, output_key: TransactionSummaryValues, account_number: str, amount_to_add:int,
+                                 limit: int) -> bool:
         account_num_pos = 3 if output_key in [FrontEndInstance.TransactionSummaryValues.transfer,
                                               FrontEndInstance.TransactionSummaryValues.withdraw] else 1
         return sum(
             map(lambda row: int(row[2]),
                 filter(lambda row: row[0] == output_key and account_number == row[account_num_pos],
-                       self.current_file_output))) <= limit
+                       self.current_file_output))) <= (limit - amount_to_add)
 
     # returns a valid account number from user input
     # If check_accounts_list is True, requires the number to be in the accounts list
