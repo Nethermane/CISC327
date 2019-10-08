@@ -5,3 +5,6 @@ __pycache__/
 
 #folders created by script
 new_transactions/
+
+#Pycharm stuff
+.idea/
