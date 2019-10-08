@@ -4,7 +4,6 @@ import os.path
 import sys
 import enum
 from typing import List
-import pathlib
 
 
 class FrontEndInstance(object):
@@ -69,10 +68,12 @@ class FrontEndInstance(object):
     ATM_COMMANDS: List[Commands] = [Commands.login, Commands.logout, Commands.deposit, Commands.withdraw,
                                     Commands.transfer]
     LOGIN_MESSAGE: str = 'Select session type (' + UserState.atm.value + ' or ' + UserState.agent.value + '): '
-    CREATE_ACCOUNT_WITHOUT_PRIVILEGE: str = 'Error: ' + UserState.agent.value + 'session required for createacct ' \
-                                                                                'command '
     HELP_TEXT: str = 'Accepted commands: ' + ', '.join(map(lambda c: c.value, ATM_COMMANDS)) + ', ' \
                      + ', '.join(map(lambda c: c.value, PRIVILEGED_COMMANDS))
+
+    @staticmethod
+    def missing_user_state_for_command(state: UserState, command: Commands):
+        return 'Error: ' + state.value + 'session required for ' + command.value + ' command '
 
     @staticmethod
     def successful_login(session_type: UserState) -> str:
@@ -85,7 +86,7 @@ class FrontEndInstance(object):
 
     @staticmethod
     def must_be_signed_in_for_command(command: Commands) -> str:
-        return 'Command: "' + command.value + '" requires logged in session'
+        return 'Command: "' + command.value + '" requires a logged in session'
 
     @staticmethod
     def error_cents_less_than(max_value: str) -> str:
@@ -170,7 +171,7 @@ class FrontEndInstance(object):
 
     def create_account(self) -> None:
         if self.user_status != self.UserState.agent:
-            print(self.CREATE_ACCOUNT_WITHOUT_PRIVILEGE)
+            print(self.missing_user_state_for_command(self.UserState.agent, self.Commands.createacct))
             return
         account_number = self.get_valid_account_number()
         if account_number is None:
@@ -183,7 +184,7 @@ class FrontEndInstance(object):
 
     def delete_account(self) -> None:
         if self.user_status != self.UserState.agent:
-            print(self.CREATE_ACCOUNT_WITHOUT_PRIVILEGE)
+            print(self.missing_user_state_for_command(self.UserState.agent, self.Commands.deleteacct))
             return
         account_number = self.get_valid_account_number()
         if account_number is None:
