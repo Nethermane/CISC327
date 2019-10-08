@@ -20,9 +20,10 @@ help_command = 'help'
 privileged_commands = [createacct_command, deleteacct_command]
 atm_commands = [login_command, logout_command, deposit_command, withdraw_command, transfer_command]
 help_text = 'Accepted commands: ' + ', '.join(atm_commands) + ', ' + ', '.join(privileged_commands)
-login_message = 'Select session type ('+atm_state+' or '+agent_state + '): '
+login_message = 'Select session type (' + atm_state + ' or ' + agent_state + '): '
 create_account_without_privilege = 'Error: ' + agent_state + ' session required for createacct command'
-invalid_account_name = 'Error: invalid account name. Account number must be between 3 and 30 alphanumeric characters, not beginning or ending with a space'
+invalid_account_name = 'Error: invalid account name. Account number must be between 3 and 30 alphanumeric characters,' \
+                       ' not beginning or ending with a space '
 account_number_input = 'Account Number: '
 account_name_input = 'Account Name: '
 invalid_account_number = 'Invalid account number, must be 7 digits, not beginning with a 0'
@@ -55,13 +56,23 @@ from_account_prompt = 'From: '
 to_account_prompt = 'To: '
 accounts_file = 'valid_accounts.txt'
 parse_number_error = 'Error parsing input'
+
+
 def summary_transaction_file(timestamp, num):
-    return 'new_transactions/summary_transaction'+timestamp+'_'+str(num)+'.txt'
+    return 'new_transactions/summary_transaction' + timestamp + '_' + str(num) + '.txt'
+
+
 def successful_login(session_type):
-    return 'Successfully logged in as "' + session_type +'"'
+    return 'Successfully logged in as "' + session_type + '"'
+
+
 def unrecognized_login_command(command):
-    return 'Error unrecognized command: "'+command+'", login with either ' + atm_state + ' or ' + agent_state
+    return 'Error unrecognized command: "' + command + '", login with either ' + atm_state + ' or ' + agent_state
+
+
 def must_be_signed_in_for_command(command):
     return 'Command: "' + command + '" requires logged in session'
+
+
 def error_cents_less_than(max_value):
     return 'Error: must be less than or equal to ' + max_value + ' cents'
