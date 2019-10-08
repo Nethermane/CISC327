@@ -4,9 +4,11 @@ import os.path
 import sys
 import enum
 from typing import List
+import pathlib
 
 
 class FrontEndInstance(object):
+    # Const max values that are relevant to this class and should be easy to find
     MAX_DEPOSIT_ATM_ONCE: int = 200000
     MAX_DEPOSIT_ATM_DAILY: int = 500000
     MAX_DEPOSIT_TELLER_ONCE: int = 99999999
@@ -17,46 +19,58 @@ class FrontEndInstance(object):
     MAX_TRANSFER_ATM_DAILY: int = 1000000
     MAX_TRANSFER_AGENT_ONCE: int = 99999999
 
+    '''
+    Enum to represent the current user state
+    '''
+
     class UserState(enum.Enum):
-        idle = 'idle'
-        atm = 'atm'
-        agent = 'machine'
+        idle: str = 'idle'
+        atm: str = 'atm'
+        agent: str = 'machine'
 
         def __str__(self):
             return self.value
+
+    '''
+    Enum for all the commands a user can enter from the main loop
+    '''
 
     class Commands(enum.Enum):
-        login = 'login'
-        logout = 'logout'
-        createacct = 'createacct'
-        deleteacct = 'deleteacct'
-        deposit = 'deposit'
-        withdraw = 'withdraw'
-        transfer = 'transfer'
-        cancel = 'q'
-        help = 'help'
+        login: str = 'login'
+        logout: str = 'logout'
+        createacct: str = 'createacct'
+        deleteacct: str = 'deleteacct'
+        deposit: str = 'deposit'
+        withdraw: str = 'withdraw'
+        transfer: str = 'transfer'
+        cancel: str = 'q'
+        help: str = 'help'
 
         def __str__(self):
             return self.value
+
+    '''
+    Enum for all the Transaction summary acronyms
+    '''
 
     class TransactionSummaryValues(enum.Enum):
-        deposit = 'DEP'
-        withdraw = 'WDR'
-        transfer = 'XFR'
-        createacct = 'NEW'
-        deleteacct = 'DEL'
-        end_of_file = 'EOS'
+        deposit: str = 'DEP'
+        withdraw: str = 'WDR'
+        transfer: str = 'XFR'
+        createacct: str = 'NEW'
+        deleteacct: str = 'DEL'
+        end_of_file: str = 'EOS'
 
         def __str__(self):
             return self.value
 
-    PRIVILEGED_COMMANDS = [Commands.createacct, Commands.deleteacct]
-    ATM_COMMANDS = [Commands.login, Commands.logout, Commands.deposit, Commands.withdraw, Commands.transfer]
-
+    # Constant strings that are defined by members of FrontEndInstance
+    PRIVILEGED_COMMANDS: List[Commands] = [Commands.createacct, Commands.deleteacct]
+    ATM_COMMANDS: List[Commands] = [Commands.login, Commands.logout, Commands.deposit, Commands.withdraw,
+                                    Commands.transfer]
     LOGIN_MESSAGE: str = 'Select session type (' + UserState.atm.value + ' or ' + UserState.agent.value + '): '
     CREATE_ACCOUNT_WITHOUT_PRIVILEGE: str = 'Error: ' + UserState.agent.value + 'session required for createacct ' \
                                                                                 'command '
-
     HELP_TEXT: str = 'Accepted commands: ' + ', '.join(map(lambda c: c.value, ATM_COMMANDS)) + ', ' \
                      + ', '.join(map(lambda c: c.value, PRIVILEGED_COMMANDS))
 
@@ -145,14 +159,14 @@ class FrontEndInstance(object):
         if self.user_status == self.UserState.idle:
             print(constants.error_logged_out_logout_message)
             return
-        else:
-            print(constants.successful_logout)
-            self.write_to_transaction_log(self.TransactionSummaryValues.end_of_file)
-            with open(self.transaction_summary_file, 'w') as fp:
-                for transaction in self.current_file_output:
-                    fp.write(' '.join(map(lambda part: str(part), transaction)) + '\n')
-                    self.current_file_output.clear()
-            self.user_status = self.UserState.idle
+        self.write_to_transaction_log(self.TransactionSummaryValues.end_of_file)
+        os.makedirs(os.path.dirname(self.transaction_summary_file), exist_ok=True)  # make folders if necessary
+        with open(self.transaction_summary_file, 'w') as fp:
+            for transaction in self.current_file_output:
+                fp.write(' '.join(map(lambda part: str(part), transaction)) + '\n')
+        self.current_file_output.clear()
+        self.user_status = self.UserState.idle
+        print(constants.successful_logout)
 
     def create_account(self) -> None:
         if self.user_status != self.UserState.agent:
