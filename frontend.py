@@ -6,6 +6,12 @@ from typing import List, Iterator
 
 
 class FrontEndInstance(object):
+    def __init__(self, accounts_file: str, transaction_summary_file: str) -> None:
+        self.accounts_file: str = accounts_file
+        self.user_status: self.UserState = self.UserState('idle')
+        self.transaction_summary: self.TransactionSummary = self.TransactionSummary(transaction_summary_file)
+        self.accounts_list: List[str] = []
+
     # Const max values that are relevant to this class and should be easy to find
     MAX_DEPOSIT_ATM_ONCE: int = 200000
     MAX_DEPOSIT_ATM_DAILY: int = 500000
@@ -56,6 +62,10 @@ class FrontEndInstance(object):
         Object that represents a row to be written to summary file
         """
 
+        def __init__(self, summary_file) -> None:
+            self._summary: List[self.TransactionSummaryRow] = []
+            self.summary_file = summary_file
+
         class TransactionSummaryRow(object):
             """
             Enum for all the Transaction summary acronyms
@@ -87,11 +97,6 @@ class FrontEndInstance(object):
                        + ' ' + self.cents \
                        + ' ' + self.from_act \
                        + ' ' + self.name
-
-        # TransactionSummary
-        def __init__(self, summary_file) -> None:
-            self._summary: List[self.TransactionSummaryRow] = []
-            self.summary_file = summary_file
 
         def add_row(self, transaction_type: TransactionSummaryRow.TransactionSummaryKeys, to: str = '0000000',
                     cents: str = '000',
@@ -174,12 +179,6 @@ class FrontEndInstance(object):
     @staticmethod
     def error_cents_less_than(max_value: str) -> str:
         return 'Error: must be less than or equal to ' + max_value + ' cents'
-
-    def __init__(self, accounts_file: str, transaction_summary_file: str) -> None:
-        self.accounts_file: str = accounts_file
-        self.user_status: self.UserState = self.UserState('idle')
-        self.transaction_summary: self.TransactionSummary = self.TransactionSummary(transaction_summary_file)
-        self.accounts_list: List[str] = []
 
     def front_end_loop(self) -> None:
         print(FrontEndInstance.first_launch_message)
