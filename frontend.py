@@ -2,11 +2,22 @@ import enum
 import os.path
 import re
 import sys
-from typing import List, Iterator
+from typing import List
 
 
-class FrontEndInstance(object):
+class FrontEndInstance:
+    """
+    This is a class to represent an instance of the front end.
+    This requires a list of accounts to use and a file name transactions output to
+    This class prompts users for inputs and, if completed/correct stores the transactions
+    Once the logout transaction is entered it outputs the transaction to the summary file
+
+    :param accounts_file: The file that this instance will read accounts from
+    :param transaction_summary_file: The file that will be written to once logout is inputted
+    """
+
     def __init__(self, accounts_file: str, transaction_summary_file: str) -> None:
+
         self.accounts_file: str = accounts_file
         self.user_status: self.UserState = self.UserState('idle')
         self.transaction_summary: self.TransactionSummary = self.TransactionSummary(transaction_summary_file)
@@ -23,11 +34,8 @@ class FrontEndInstance(object):
     MAX_TRANSFER_ATM_DAILY: int = 1000000
     MAX_TRANSFER_AGENT_ONCE: int = 99999999
 
-    '''
-    Enum to represent the current user state
-    '''
-
     class UserState(enum.Enum):
+        """Enum to represent the current user state"""
         idle: str = 'idle'
         atm: str = 'atm'
         agent: str = 'machine'
@@ -35,11 +43,8 @@ class FrontEndInstance(object):
         def __str__(self):
             return self.value
 
-    '''
-    Enum for all the commands a user can enter from the main loop
-    '''
-
     class Commands(enum.Enum):
+        """Enum for all the commands a user can enter from the main loop"""
         login: str = 'login'
         logout: str = 'logout'
         createacct: str = 'createacct'
@@ -53,25 +58,28 @@ class FrontEndInstance(object):
         def __str__(self):
             return self.value
 
-    '''
-    Object that represents a transaction summary
-    '''
-
-    class TransactionSummary(object):
+    class TransactionSummary:
         """
-        Object that represents a row to be written to summary file
+        Object to represent a transaction summary, has functionality to write to file
+        :param summary_file: The file which will be written to
         """
 
         def __init__(self, summary_file) -> None:
             self._summary: List[self.TransactionSummaryRow] = []
             self.summary_file = summary_file
 
-        class TransactionSummaryRow(object):
+        class TransactionSummaryRow:
             """
-            Enum for all the Transaction summary acronyms
+            Object to represent a single row in a transaction summary.
+            :param transaction_type: The transactionType
+            :param to: The account to send to
+            :param cents: The cents to write to
+            :param from_act: The account to send from
+            :param name: the account name
             """
 
             class TransactionSummaryKeys(enum.Enum):
+                """Enum for all the Transaction summary acronyms"""
                 deposit: str = 'DEP'
                 withdraw: str = 'WDR'
                 transfer: str = 'XFR'
@@ -101,32 +109,55 @@ class FrontEndInstance(object):
         def add_row(self, transaction_type: TransactionSummaryRow.TransactionSummaryKeys, to: str = '0000000',
                     cents: str = '000',
                     from_act: str = '0000000', name: str = '***') -> None:
+            """
+            Method to add a new row to the transaction summary
+            :param transaction_type: The transactionType
+            :param to: The account to send to
+            :param cents: The cents to write to
+            :param from_act: The account to send from
+            :param name: the account name
+            """
             self._summary.append(self.TransactionSummaryRow(transaction_type, to, cents, from_act, name))
 
         def clear(self) -> None:
+            """
+            Method to clear the current transaction summary
+            """
             self._summary.clear()
 
         def total_within_daily_limit(self, output_key: TransactionSummaryRow.TransactionSummaryKeys,
-                                     account_number: str, amount_to_add: int, limit: int) -> bool:
-            return sum(self._map_row_to_cents(self._get_rows_by_num_and_transaction(output_key, account_number))) \
-                   <= (limit - amount_to_add)
-
-        @staticmethod
-        def _map_row_to_cents(rows: Iterator[TransactionSummaryRow]):
-            return map(lambda row: int(row.cents), rows)
-
-        def to_file(self) -> str:
-            return '\n'.join(map(lambda row: str(row), self._summary))
-
-        def _get_rows_by_num_and_transaction(self, output_key: TransactionSummaryRow.TransactionSummaryKeys,
-                                             account_number: str):
+                                     account_number: str, amount: int, limit: int) -> bool:
+            """
+            Check if a transaction is within the current daily limit, by summing the interactions of the same type on
+            the specific account
+            :param output_key: The transactionType
+            :param account_number: The account number to check against
+            :param amount: The amount of cents to add/transfer/withdraw
+            :param limit: The limit for that type of transaction
+            :return: Returns true if transaction within daily limit
+            """
+            # If transfer or withdraw match the from account
             if (output_key == self.TransactionSummaryRow.TransactionSummaryKeys.transfer
                     or output_key == self.TransactionSummaryRow.TransactionSummaryKeys.withdraw):
-                # return interactions matching the from account number
-                return filter(lambda row: row.transaction_type == output_key and account_number == row.from_act,
-                              self._summary)
-            # return interactions matching to function
-            return filter(lambda row: row.transaction_type == output_key and account_number == row.to, self._summary)
+                transactions_by_to_sum = filter(
+                    lambda row: row.transaction_type == output_key and account_number == row.from_act, self._summary)
+            # Otherwise look at the to account
+            else:
+                transactions_by_to_sum = filter(
+                    lambda row: row.transaction_type == output_key and account_number == row.to, self._summary)
+
+            return sum(map(lambda row: int(row.cents), transactions_by_to_sum)) <= (limit - amount)
+
+        def to_file(self) -> None:
+            """
+            Writes the transaction summary to file and clears it
+            """
+            self.add_row(self.TransactionSummaryRow.TransactionSummaryKeys.end_of_file)
+            os.makedirs(os.path.dirname(self.summary_file),
+                        exist_ok=True)  # make folders if necessary
+            with open(self.summary_file, 'w') as fp:
+                fp.write('\n'.join(map(lambda row: str(row), self._summary)))
+            self.clear()
 
     # Constant strings that are used for printing
     PRIVILEGED_COMMANDS: List[Commands] = [Commands.createacct, Commands.deleteacct]
@@ -158,29 +189,59 @@ class FrontEndInstance(object):
     successful_deposit: str = 'Deposit successful'
     successful_logout: str = 'Successfully logged out'
     successful_withdraw: str = 'Withdraw successful'
+    successful_transfer: str = 'Transfer successful'
 
     @staticmethod
     def missing_user_state_for_command(state: UserState, command: Commands) -> str:
+        """
+        Makes error string for commands missing required state
+        :param state: state that is required
+        :param command: command being entered
+        :return: string stating an error for missing command
+        """
         return 'Error: ' + state.value + 'session required for ' + command.value + ' command '
 
     @staticmethod
     def successful_login(session_type: UserState) -> str:
+        """
+        Makes message stating successful login to a session type
+        :param session_type: the session type logged into
+        :return: successful login message
+        """
         return 'Successfully logged in as "' + session_type.value + '"'
 
     @staticmethod
     def unrecognized_login_command(command: str) -> str:
-        return 'Error unrecognized command: "' + command + '", login with either ' \
+        """
+        Error message for unrecognized command when trying to login
+        :param command: user inputs
+        :return: an error message about unrecognized command
+        """
+        return 'Error: unrecognized command: "' + command + '", login with either ' \
                + FrontEndInstance.UserState.atm.value + ' or ' + FrontEndInstance.UserState.atm.agent.value
 
     @staticmethod
     def must_be_signed_in_for_command(command: Commands) -> str:
+        """
+        Error message stating command requires a logged in session
+        :param command: command in question
+        :return: message stating a command requires the user to be logged in
+        """
         return 'Command: "' + command.value + '" requires a logged in session'
 
     @staticmethod
-    def error_cents_less_than(max_value: str) -> str:
+    def error_cents_less_than_or_equal(max_value: str) -> str:
+        """
+        Error message for cents being less than a specific value
+        :param max_value: the amount the cents were greater than
+        :return: an error message stating the cents must be less than or equal to value
+        """
         return 'Error: must be less than or equal to ' + max_value + ' cents'
 
     def front_end_loop(self) -> None:
+        """
+        Method called by constructor to loop through user input and handle appropriately
+        """
         print(FrontEndInstance.first_launch_message)
         while True:
             user_command = input(FrontEndInstance.input_command)
@@ -217,6 +278,9 @@ class FrontEndInstance(object):
                 print(self.HELP_TEXT)
 
     def login(self) -> None:
+        """
+        Method allowing users to log into a user state (atm or teller)
+        """
         if self.user_status != self.UserState.idle:
             print(FrontEndInstance.error_logged_in_login)
             return
@@ -237,19 +301,21 @@ class FrontEndInstance(object):
                 continue
 
     def logout(self) -> None:
+        """
+        Method allowing users to log out of a user state
+        """
         if self.user_status == self.UserState.idle:
             print(FrontEndInstance.error_logged_out_logout_message)
             return
-        self.transaction_summary.add_row(
-            self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.end_of_file)
-        os.makedirs(os.path.dirname(self.transaction_summary.summary_file), exist_ok=True)  # make folders if necessary
-        with open(self.transaction_summary.summary_file, 'w') as fp:
-            fp.write(self.transaction_summary.to_file())
-        self.transaction_summary.clear()
+        self.transaction_summary.to_file()
+        self.accounts_list.clear()
         self.user_status = self.UserState.idle
         print(FrontEndInstance.successful_logout)
 
     def create_account(self) -> None:
+        """
+        Method allowing users to create an account
+        """
         if self.user_status != self.UserState.agent:
             print(self.missing_user_state_for_command(self.UserState.agent, self.Commands.createacct))
             return
@@ -265,6 +331,9 @@ class FrontEndInstance(object):
         print(FrontEndInstance.successful_create)
 
     def delete_account(self) -> None:
+        """
+        Method allowing users to delete accounts
+        """
         if self.user_status != self.UserState.agent:
             print(self.missing_user_state_for_command(self.UserState.agent, self.Commands.deleteacct))
             return
@@ -280,6 +349,9 @@ class FrontEndInstance(object):
         print(FrontEndInstance.successful_delete)
 
     def deposit(self) -> None:
+        """
+        Method allowing users to deposit an amount of money into an account
+        """
         if self.user_status == self.UserState.idle:
             print(FrontEndInstance.must_be_signed_in_for_command(self.Commands.deposit))
             return
@@ -306,6 +378,9 @@ class FrontEndInstance(object):
                 print(FrontEndInstance.error_deposit_over_max)
 
     def withdraw(self) -> None:
+        """
+        Method allowing users to withdraw an amount of money from an account
+        """
         if self.user_status == self.UserState.idle:
             print(FrontEndInstance.must_be_signed_in_for_command(self.Commands.withdraw))
             return
@@ -333,6 +408,9 @@ class FrontEndInstance(object):
                 print(FrontEndInstance.error_withdraw_over_max)
 
     def transfer(self) -> None:
+        """
+        Method allowing users to transfer money between accounts
+        """
         if self.user_status == self.UserState.idle:
             print(FrontEndInstance.must_be_signed_in_for_command(self.Commands.withdraw))
             return
@@ -353,31 +431,35 @@ class FrontEndInstance(object):
                 self.transaction_summary.add_row(
                     self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.transfer,
                     to_account, cents, from_account)
-                print(FrontEndInstance.successful_withdraw)
-                continue
+                print(FrontEndInstance.successful_transfer)
+                return
             else:
                 print(FrontEndInstance.error_withdraw_over_max)
 
     @staticmethod
     def valid_account_name(name: str) -> bool:
+        """
+        Method to check if an account name is valid
+        :param name: name to check
+        :return: True if valid 3-30 characters not starting/ending with whitespace
+        """
         return name is not None and re.search('^[\w][\w ]{1,28}[\w]$', name) is not None
 
     @staticmethod
     def valid_account_number(number: str) -> bool:
+        """
+        Checks if an account number is valid
+        :param number: the number to check
+        :return: True if account number exactly 7 digits, not starting with 0
+        """
         return number is not None and re.search('^[1-9][0-9]{6}$', number) is not None
 
     @staticmethod
-    def valid_cents_amount(number: int, max_value: int) -> bool:
-        return number is not None and number <= max_value
-
-    '''
-    returns a valid account number from user input
-    If check_accounts_list is True, requires the number to be in the accounts list
-    returns None if exit command is provided
-    '''
-
-    @staticmethod
     def get_valid_account_number() -> str or None:
+        """
+        Gets a snytactically correct account number
+        :return: Account number or None if cancel command inputted
+        """
         while True:
             account_number = input(FrontEndInstance.input_account_number)
             if FrontEndInstance.valid_account_number(account_number):
@@ -387,11 +469,12 @@ class FrontEndInstance(object):
             else:
                 print(FrontEndInstance.invalid_account_number)
 
-    '''
-    Gets a valid account number, validating against the accounts_list
-    '''
-
     def get_account_number_in_list(self, prompt=input_account_number) -> str or None:
+        """
+        Gets a valid account number, validating against the accounts_list
+        :param prompt: the user prompt to provide the user
+        :return: The account number or None if exit command inputted
+        """
         while True:
             account_number = input(prompt)
             if account_number in self.accounts_list:
@@ -401,13 +484,12 @@ class FrontEndInstance(object):
             else:
                 print(FrontEndInstance.error_account_not_found)
 
-    '''
-    returns a valid account name from user input
-    returns None if exit command is provided
-    '''
-
     @staticmethod
     def get_valid_account_name() -> str or None:
+        """
+        Gets a syntactically correct account name
+        :return: a valid account name from user input or None if exit command inputted
+        """
         while True:
             account_name = input(FrontEndInstance.input_account_name)
             if FrontEndInstance.valid_account_name(account_name):
@@ -417,22 +499,21 @@ class FrontEndInstance(object):
             else:
                 print(FrontEndInstance.invalid_account_name)
 
-    '''
-    returns a valid cents amount less than or equal to max value
-    returns None if exit command provided
-    returns a string, ensuring it is validly numeric.
-    '''
-
     @staticmethod
     def get_valid_numeric_amount(max_value: int) -> str or None:
+        """
+        Get valid numeric string representing an amount of cents
+        :param max_value: The max amount of cents to accept
+        :return: a valid cents amount less than or equal to max value or None if exit command provided
+        """
         while True:
             cents = input(FrontEndInstance.input_cents).replace(',', '')
             try:
                 cents_int = int(cents)
-                if FrontEndInstance.valid_cents_amount(cents_int, max_value):
+                if cents_int <= max_value:
                     return str(cents_int)
                 else:
-                    print(FrontEndInstance.error_cents_less_than(str(max_value)))
+                    print(FrontEndInstance.error_cents_less_than_or_equal(str(max_value)))
             except ValueError:
                 if cents == FrontEndInstance.Commands.cancel:
                     return None
