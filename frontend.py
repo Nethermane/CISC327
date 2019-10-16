@@ -139,22 +139,21 @@ class FrontEndInstance:
             # If transfer or withdraw match the from account
             if (output_key == self.TransactionSummaryRow.TransactionSummaryKeys.transfer
                     or output_key == self.TransactionSummaryRow.TransactionSummaryKeys.withdraw):
-                transactions_by_to_sum = filter(
+                transactions_to_sum = filter(
                     lambda row: row.transaction_type == output_key and account_number == row.from_act, self._summary)
             # Otherwise look at the to account
             else:
-                transactions_by_to_sum = filter(
+                transactions_to_sum = filter(
                     lambda row: row.transaction_type == output_key and account_number == row.to, self._summary)
 
-            return sum(map(lambda row: int(row.cents), transactions_by_to_sum)) <= (limit - amount)
+            return sum(map(lambda row: int(row.cents), transactions_to_sum)) <= (limit - amount)
 
         def to_file(self) -> None:
             """
             Writes the transaction summary to file and clears it
             """
             self.add_row(self.TransactionSummaryRow.TransactionSummaryKeys.end_of_file)
-            os.makedirs(os.path.dirname(self.summary_file),
-                        exist_ok=True)  # make folders if necessary
+            os.makedirs(os.path.dirname(self.summary_file), exist_ok=True)  # make all folders and file if necessary
             with open(self.summary_file, 'w') as fp:
                 fp.write('\n'.join(map(lambda row: str(row), self._summary)))
             self.clear()
@@ -169,7 +168,7 @@ class FrontEndInstance:
     error_account_not_found: str = 'Error: account number not found'
     error_deposit_over_max: str = 'Error: deposit over limit'
     error_logged_in_login: str = 'Error: already logged in'
-    error_logged_out_logout_message: str = 'Error not logged in'
+    error_logged_out_logout_message: str = 'Error: not logged in'
     error_unrecognized_command: str = 'Error: unrecognized command'
     error_withdraw_over_max: str = 'Error: withdraw over limit'
     first_launch_message: str = 'Welcome to Quinterac banking, type login to begin'
@@ -183,7 +182,7 @@ class FrontEndInstance:
                                 'characters, not beginning or ending with a space '
     invalid_account_number: str = 'Invalid account number, must be 7 digits, not beginning with a 0'
     not_logged_in_message: str = 'In idle state, please login before use'
-    parse_number_error: str = 'Error parsing input'
+    parse_number_error: str = 'Error:parsing input'
     successful_create: str = "Create account successful"
     successful_delete: str = 'Delete account successful'
     successful_deposit: str = 'Deposit successful'
@@ -281,21 +280,21 @@ class FrontEndInstance:
         """
         Method allowing users to log into a user state (atm or teller)
         """
-        if self.user_status != self.UserState.idle:
+        if self.user_status != self.UserState.idle:  # if already signed in
             print(FrontEndInstance.error_logged_in_login)
             return
         while True:
             user_input = input(self.LOGIN_MESSAGE)
             try:
                 parsed_login = self.UserState(user_input.lower().strip())
-                if parsed_login == self.UserState.atm or parsed_login == self.UserState.agent:
+                if parsed_login == self.UserState.atm or parsed_login == self.UserState.agent:  # Input is atm or agent
                     self.user_status = parsed_login
                     with open(self.accounts_file) as fp:
-                        self.accounts_list = fp.readlines()
+                        self.accounts_list = fp.readlines()  # Load the accounts
                     print(FrontEndInstance.successful_login(parsed_login))
                     return
             except ValueError:
-                if user_input == self.Commands.cancel.value:
+                if user_input == self.Commands.cancel.value:  # If cancel command inputted
                     return
                 print(FrontEndInstance.unrecognized_login_command(user_input))
                 continue
@@ -304,26 +303,26 @@ class FrontEndInstance:
         """
         Method allowing users to log out of a user state
         """
-        if self.user_status == self.UserState.idle:
+        if self.user_status == self.UserState.idle:  # If user not logged in
             print(FrontEndInstance.error_logged_out_logout_message)
             return
-        self.transaction_summary.to_file()
-        self.accounts_list.clear()
-        self.user_status = self.UserState.idle
+        self.transaction_summary.to_file()  # Write the transaction to summary file
+        self.accounts_list.clear()  # Clear the accounts list (login populates it again if logged in again)
+        self.user_status = self.UserState.idle  # Actually set the session to logged out
         print(FrontEndInstance.successful_logout)
 
     def create_account(self) -> None:
         """
         Method allowing users to create an account
         """
-        if self.user_status != self.UserState.agent:
+        if self.user_status != self.UserState.agent:  # If user not in agent state
             print(self.missing_user_state_for_command(self.UserState.agent, self.Commands.createacct))
             return
         account_number = self.get_valid_account_number()
-        if account_number is None:
+        if account_number is None:  # If cancel command
             return
         account_name = self.get_valid_account_name()
-        if account_name is None:
+        if account_name is None:  # If cancel command
             return
         self.transaction_summary.add_row(
             self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.createacct,
@@ -334,14 +333,14 @@ class FrontEndInstance:
         """
         Method allowing users to delete accounts
         """
-        if self.user_status != self.UserState.agent:
+        if self.user_status != self.UserState.agent:  # If user not in agent state
             print(self.missing_user_state_for_command(self.UserState.agent, self.Commands.deleteacct))
             return
         account_number = self.get_valid_account_number()
-        if account_number is None:
+        if account_number is None:  # If cancel command inputted
             return
         account_name = self.get_valid_account_name()
-        if account_name is None:
+        if account_name is None:  # If cancel command inputted
             return
         self.transaction_summary.add_row(
             self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.deleteacct,
@@ -352,7 +351,7 @@ class FrontEndInstance:
         """
         Method allowing users to deposit an amount of money into an account
         """
-        if self.user_status == self.UserState.idle:
+        if self.user_status == self.UserState.idle:  # If user not logged in
             print(FrontEndInstance.must_be_signed_in_for_command(self.Commands.deposit))
             return
         account_number = self.get_account_number_in_list()
@@ -360,9 +359,9 @@ class FrontEndInstance:
             # Check number less than max single transaction
             cents = FrontEndInstance.get_valid_numeric_amount(
                 self.MAX_DEPOSIT_ATM_ONCE if self.user_status == self.UserState.atm else self.MAX_DEPOSIT_TELLER_ONCE)
-            if cents is None:
+            if cents is None:  # If cancel command inputted
                 return
-            # Check if total deposits that day less than total
+            # Check if total deposits that day less than total or in agent mode
             if (self.user_status == self.UserState.agent
                     or self.transaction_summary.total_within_daily_limit(
                         self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.deposit,
@@ -381,18 +380,18 @@ class FrontEndInstance:
         """
         Method allowing users to withdraw an amount of money from an account
         """
-        if self.user_status == self.UserState.idle:
+        if self.user_status == self.UserState.idle:  # If user not logged in
             print(FrontEndInstance.must_be_signed_in_for_command(self.Commands.withdraw))
             return
         account_number = self.get_account_number_in_list()
-        # Check number less than max single transaction
         while True:
+            # Get number less than max single transaction
             cents = FrontEndInstance.get_valid_numeric_amount(
                 self.MAX_WITHDRAW_ATM_ONCE if self.user_status == self.UserState.atm
                 else self.MAX_WITHDRAW_AGENT_ONCE)
-            if cents is None:
+            if cents is None:  # If cancel command inputted
                 return
-            # Check if total withdraw less than total limit
+            # Check if total withdraw less than total limit, or in agent mode
             if (self.user_status == self.UserState.agent
                     or self.transaction_summary.total_within_daily_limit(
                         self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.withdraw,
@@ -420,9 +419,9 @@ class FrontEndInstance:
             # Check number less than max single transaction
             cents = self.get_valid_numeric_amount(
                 self.MAX_TRANSFER_ATM_ONCE if self.user_status == self.UserState.atm else self.MAX_TRANSFER_AGENT_ONCE)
-            if cents is None:
+            if cents is None:  # If cancel command inputted
                 return
-            # Check if total withdraw less than total limit
+            # Check if total transfer less than total limit, or in agent mode
             if (self.user_status == self.UserState.agent or self.transaction_summary.total_within_daily_limit(
                     self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.transfer,
                     from_account,
@@ -457,7 +456,7 @@ class FrontEndInstance:
     @staticmethod
     def get_valid_account_number() -> str or None:
         """
-        Gets a snytactically correct account number
+        Gets a syntactically correct account number
         :return: Account number or None if cancel command inputted
         """
         while True:
