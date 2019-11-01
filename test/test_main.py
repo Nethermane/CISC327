@@ -1,8 +1,9 @@
+import io
+import os
+import sys
 import tempfile
 from importlib import reload
-import os
-import io
-import sys
+
 import frontend as app
 
 path = os.path.dirname(os.path.abspath(__file__))
@@ -21,9 +22,10 @@ def test_r1_t1(capsys):
             'login', 'quit'
         ],
         intput_valid_accounts=[],
-        expected_tail_of_terminal_output=[app.FrontEndInstance.input_command + app.FrontEndInstance.LOGIN_MESSAGE],
+        expected_tail_of_terminal_output=[app.FrontEndInstance.LOGIN_MESSAGE],
         expected_output_transactions=[]
     )
+
 
 def helper(
         capsys,
@@ -61,6 +63,8 @@ def helper(
         valid_account_list_file,
         transaction_summary_file]
 
+    for i in range(len(terminal_input)):
+        terminal_input[i] += '\n'
     # set terminal input
     sys.stdin = io.StringIO(
         os.linesep.join(terminal_input))
@@ -75,7 +79,7 @@ def helper(
     # split terminal output in lines
     out_lines = out.splitlines()
     # compare terminal outputs at the end.`
-    for i in range(1, len(expected_tail_of_terminal_output)+1):
+    for i in range(1, len(expected_tail_of_terminal_output) + 1):
         index = i * -1
         assert expected_tail_of_terminal_output[index] == out_lines[index]
 
