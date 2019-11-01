@@ -16,7 +16,7 @@ def test_r1_t1(capsys):
         terminal_input=[
             'login', 'quit'
         ],
-        _valid_accounts=[],
+        input_valid_accounts=[],
         expected_tail_of_terminal_output=[app.FrontEndInstance.LOGIN_MESSAGE],
         expected_output_transactions=[]
     )
@@ -65,7 +65,7 @@ def helper(
         capsys -- object created by pytest to capture stdout and stderr
         terminal_input -- list of string for terminal input
         expected_tail_of_terminal_output list of expected string at the tail of terminal
-        _valid_accounts -- list of valid accounts in the valid_account_list_file
+        input_valid_accounts -- list of valid accounts in the valid_account_list_file
         expected_output_transactions -- list of expected output transactions
     """
 
@@ -80,7 +80,7 @@ def helper(
     temp_fd2, temp_file2 = tempfile.mkstemp()
     valid_account_list_file = temp_file2
     with open(valid_account_list_file, 'w') as wf:
-        wf.write('\n'.join(_valid_accounts))
+        wf.write('\n'.join(input_valid_accounts))
 
     # prepare program parameters
     sys.argv = [
