@@ -172,6 +172,7 @@ class FrontEndInstance:
     error_logged_out_logout_message: str = 'Error: not logged in'
     error_unrecognized_command: str = 'Error: unrecognized command'
     error_withdraw_over_max: str = 'Error: withdraw over limit'
+    error_transfer_over_max: str = 'Error: transfer over limit'
     first_launch_message: str = 'Welcome to Quinterac banking, type login to begin'
     input_account_name: str = 'Account Name: '
     input_account_number: str = 'Account Number: '
@@ -440,7 +441,7 @@ class FrontEndInstance:
                 print(FrontEndInstance.successful_transfer)
                 return
             else:
-                print(FrontEndInstance.error_withdraw_over_max)
+                print(FrontEndInstance.error_transfer_over_max)
 
     @staticmethod
     def valid_account_name(name: str) -> bool:
