@@ -10,20 +10,45 @@ path = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_r1_t1(capsys):
-    """Testing r2. Self-contained (i.e. everything in the code approach)
-    [my favorite - all in one place with the code]
 
-    Arguments:
-        capsys -- object created by pytest to capture stdout and stderr
-    """
     helper(
         capsys=capsys,
         terminal_input=[
             'login', 'quit'
         ],
-        intput_valid_accounts=[],
+        _valid_accounts=[],
         expected_tail_of_terminal_output=[app.FrontEndInstance.LOGIN_MESSAGE],
         expected_output_transactions=[]
+    )
+
+
+def test_r17_t1(capsys):
+
+    '''
+    ATM transfers can't be greater than $10000
+    '''
+
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'machine', 'transfer', '1234567', '1000001', 'logout', 'quit'],
+        input_valid_accounts=['1234567', '1234566', '0000000'],
+        expected_tail_of_terminal_output=['Successful transaction'],
+        expected_output_transactions=['XFR 1234567 1000000 1234566 ***', 'EOS 1234567 000 0000000 ***']
+    )
+
+
+def test_r17_t2(capsys):
+
+    '''
+    Atm transfers should work for <=$10000
+    '''
+
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'machine', 'transfer', '1234567', '1234566', '1000000', 'logout', 'quit'],
+        input_valid_accounts=['1234567', '1234566', '0000000'],
+        expected_tail_of_terminal_output=['Successful transaction'],
+        expected_output_transactions=['XFR 1234567 1000000 1234566 ***', 'EOS 1234567 000 0000000 ***']
     )
 
 
@@ -31,7 +56,7 @@ def helper(
         capsys,
         terminal_input,
         expected_tail_of_terminal_output,
-        intput_valid_accounts,
+        input_valid_accounts,
         expected_output_transactions
 ):
     """Helper function for testing
@@ -40,7 +65,7 @@ def helper(
         capsys -- object created by pytest to capture stdout and stderr
         terminal_input -- list of string for terminal input
         expected_tail_of_terminal_output list of expected string at the tail of terminal
-        intput_valid_accounts -- list of valid accounts in the valid_account_list_file
+        _valid_accounts -- list of valid accounts in the valid_account_list_file
         expected_output_transactions -- list of expected output transactions
     """
 
@@ -55,7 +80,7 @@ def helper(
     temp_fd2, temp_file2 = tempfile.mkstemp()
     valid_account_list_file = temp_file2
     with open(valid_account_list_file, 'w') as wf:
-        wf.write('\n'.join(intput_valid_accounts))
+        wf.write('\n'.join(_valid_accounts))
 
     # prepare program parameters
     sys.argv = [
