@@ -251,9 +251,10 @@ class FrontEndInstance:
                 parsed_command = self.Commands(user_command.lower().strip())
             except ValueError:
                 print(FrontEndInstance.error_unrecognized_command)
-                break
-            # Prevent all commands but login before logging in
-            if self.user_status == self.UserState.idle and parsed_command != self.Commands.login:
+            if parsed_command == self.Commands.quit:
+                return
+            # Prevent all other commands but login before logging in
+            elif self.user_status == self.UserState.idle and parsed_command != self.Commands.login:
                 print(FrontEndInstance.not_logged_in_message)
             # login
             elif parsed_command == self.Commands.login:
@@ -279,8 +280,6 @@ class FrontEndInstance:
                 self.transfer()
             elif parsed_command == self.Commands.help:
                 print(self.HELP_TEXT)
-            elif parsed_command == self.Commands.quit:
-                return
 
     def login(self) -> bool:
         """
@@ -332,6 +331,7 @@ class FrontEndInstance:
             return
         if account_number in self.accounts_list:
             print(FrontEndInstance.error_account_number_already_exists)
+            return
         account_name = self.get_valid_account_name()
         if account_name is None:  # If cancel command
             return
