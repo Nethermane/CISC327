@@ -37,8 +37,8 @@ class FrontEndInstance:
     class UserState(enum.Enum):
         """Enum to represent the current user state"""
         idle: str = 'idle'
-        atm: str = 'atm'
-        agent: str = 'machine'
+        atm: str = 'machine'
+        agent: str = 'agent'
 
         def __str__(self):
             return self.value
