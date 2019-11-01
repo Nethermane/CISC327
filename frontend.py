@@ -54,6 +54,7 @@ class FrontEndInstance:
         transfer: str = 'transfer'
         cancel: str = 'q'
         help: str = 'help'
+        quit: str = 'quit'
 
         def __str__(self):
             return self.value
@@ -248,13 +249,14 @@ class FrontEndInstance:
                 parsed_command = self.Commands(user_command.lower().strip())
             except ValueError:
                 print(FrontEndInstance.error_unrecognized_command)
-                continue
+                break
             # Prevent all commands but login before logging in
             if self.user_status == self.UserState.idle and parsed_command != self.Commands.login:
                 print(FrontEndInstance.not_logged_in_message)
             # login
             elif parsed_command == self.Commands.login:
-                self.login()
+                if self.login():
+                    return
             # logout
             elif parsed_command == self.Commands.logout:
                 self.logout()
@@ -275,14 +277,17 @@ class FrontEndInstance:
                 self.transfer()
             elif parsed_command == self.Commands.help:
                 print(self.HELP_TEXT)
+            elif parsed_command == self.Commands.quit:
+                return
 
-    def login(self) -> None:
+    def login(self) -> bool:
         """
         Method allowing users to log into a user state (atm or teller)
+        Returns true if the user entered exit
         """
         if self.user_status != self.UserState.idle:  # if already signed in
             print(FrontEndInstance.error_logged_in_login)
-            return
+            return False
         while True:
             user_input = input(self.LOGIN_MESSAGE)
             try:
@@ -292,20 +297,22 @@ class FrontEndInstance:
                     with open(self.accounts_file) as fp:
                         self.accounts_list = fp.readlines()  # Load the accounts
                     print(FrontEndInstance.successful_login(parsed_login))
-                    return
+                    return False
             except ValueError:
                 if user_input == self.Commands.cancel.value:  # If cancel command inputted
-                    return
+                    return False
+                elif user_input == self.Commands.quit.value:
+                    return True
                 print(FrontEndInstance.unrecognized_login_command(user_input))
                 continue
 
-    def logout(self) -> None:
+    def logout(self) -> bool:
         """
         Method allowing users to log out of a user state
         """
         if self.user_status == self.UserState.idle:  # If user not logged in
             print(FrontEndInstance.error_logged_out_logout_message)
-            return
+            return False
         self.transaction_summary.to_file()  # Write the transaction to summary file
         self.accounts_list.clear()  # Clear the accounts list (login populates it again if logged in again)
         self.user_status = self.UserState.idle  # Actually set the session to logged out
@@ -519,10 +526,12 @@ class FrontEndInstance:
                 print(FrontEndInstance.parse_number_error)
 
 
+def main(accounts_file_input, transaction_summary_file_input):
+    FrontEndInstance(accounts_file_input, transaction_summary_file_input).front_end_loop()
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         print('Invalid usage, must be of the format "frontend accounts_file.txt transaction_summary.txt"')
         exit(1)
-    accounts_file_input = os.path.normpath(sys.argv[1])
-    transaction_summary_file_input = os.path.normpath(sys.argv[2])
-    FrontEndInstance(accounts_file_input, transaction_summary_file_input).front_end_loop()
+    main(os.path.normpath(sys.argv[1]), os.path.normpath(sys.argv[2]))
