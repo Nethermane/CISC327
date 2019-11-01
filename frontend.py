@@ -173,6 +173,7 @@ class FrontEndInstance:
     error_unrecognized_command: str = 'Error: unrecognized command'
     error_withdraw_over_max: str = 'Error: withdraw over limit'
     error_transfer_over_max: str = 'Error: transfer over limit'
+    error_account_number_already_exists: str = 'Error: Account number already exists'
     first_launch_message: str = 'Welcome to Quinterac banking, type login to begin'
     input_account_name: str = 'Account Name: '
     input_account_number: str = 'Account Number: '
@@ -329,6 +330,8 @@ class FrontEndInstance:
         account_number = self.get_valid_account_number()
         if account_number is None:  # If cancel command
             return
+        if account_number in self.accounts_list:
+            print(FrontEndInstance.error_account_number_already_exists)
         account_name = self.get_valid_account_name()
         if account_name is None:  # If cancel command
             return
