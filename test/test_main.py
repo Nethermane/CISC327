@@ -431,7 +431,7 @@ def test_r10_t3(capsys):
 
 
 def test_r11_t1(capsys):
-    #verify deposit checks for valid account number in valid accounts list
+    # verify deposit checks for valid account number in valid accounts list
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'deposit', '1234567', 'q', 'quit'],
@@ -443,6 +443,17 @@ def test_r11_t1(capsys):
 
 def test_r11_t2(capsys):
     # Verify invalid accounts can't deposit
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'agent', 'deposit', '1234567', 'q', 'quit'],
+        input_valid_accounts=['0000000'],
+        expected_tail_of_terminal_output=['Error: account number not found', 'Account Number: ', 'Command: '],
+        expected_output_transactions=[]
+    )
+
+
+def test_r11_t3(capsys):
+    # Ensure that the amount deposited is a valid number
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'deposit', '1234567', '1a2b', 'q', 'quit'],
