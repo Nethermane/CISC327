@@ -163,7 +163,7 @@ class FrontEndInstance:
     PRIVILEGED_COMMANDS: List[Commands] = [Commands.createacct, Commands.deleteacct]
     ATM_COMMANDS: List[Commands] = [Commands.login, Commands.logout, Commands.deposit, Commands.withdraw,
                                     Commands.transfer]
-    LOGIN_MESSAGE: str = 'Select session type (' + UserState.atm.value + ' or ' + UserState.agent.value + '): '
+    LOGIN_MESSAGE: str = 'Select session type (' + UserState.atm.value + ' or ' + UserState.agent.value + '): \n'
     HELP_TEXT: str = 'Accepted commands: ' + ', '.join(map(lambda c: c.value, ATM_COMMANDS)) + ', ' \
                      + ', '.join(map(lambda c: c.value, PRIVILEGED_COMMANDS))
     error_account_not_found: str = 'Error: account number not found'
@@ -175,14 +175,14 @@ class FrontEndInstance:
     error_transfer_over_max: str = 'Error: transfer over limit'
     error_account_number_already_exists: str = 'Error: Account number already exists'
     first_launch_message: str = 'Welcome to Quinterac banking, type login to begin'
-    input_account_name: str = 'Account Name: '
-    input_account_number: str = 'Account Number: '
-    input_cents: str = 'Amount(cents): '
-    input_command: str = 'Command: '
-    input_from: str = 'From: '
-    input_to: str = 'To: '
+    input_account_name: str = 'Account Name: \n'
+    input_account_number: str = 'Account Number: \n'
+    input_cents: str = 'Amount(cents): \n'
+    input_command: str = 'Command: \n'
+    input_from: str = 'From: \n'
+    input_to: str = 'To: \n'
     invalid_account_name: str = 'Invalid account name. Account number must be between 3 and 30 alphanumeric ' \
-                                'characters, not beginning or ending with a space '
+                                'characters, not beginning or ending with a space'
     invalid_account_number: str = 'Invalid account number, must be 7 digits, not beginning with a 0'
     not_logged_in_message: str = 'In idle state, please login before use'
     parse_number_error: str = 'Error:parsing input'
@@ -201,7 +201,7 @@ class FrontEndInstance:
         :param command: command being entered
         :return: string stating an error for missing command
         """
-        return 'Error: ' + state.value + 'session required for ' + command.value + ' command '
+        return 'Error: ' + state.value + ' session required for ' + command.value + ' command'
 
     @staticmethod
     def successful_login(session_type: UserState) -> str:
@@ -249,37 +249,37 @@ class FrontEndInstance:
             user_command = input(FrontEndInstance.input_command)
             try:
                 parsed_command = self.Commands(user_command.lower().strip())
+                if parsed_command == self.Commands.quit:
+                    return
+                # Prevent all other commands but login before logging in
+                elif self.user_status == self.UserState.idle and parsed_command != self.Commands.login:
+                    print(FrontEndInstance.not_logged_in_message)
+                # login
+                elif parsed_command == self.Commands.login:
+                    if self.login():
+                        return
+                # logout
+                elif parsed_command == self.Commands.logout:
+                    self.logout()
+                # createacct
+                elif parsed_command == self.Commands.createacct:
+                    self.create_account()
+                # deleteacct
+                elif parsed_command == self.Commands.deleteacct:
+                    self.delete_account()
+                # deposit
+                elif parsed_command == self.Commands.deposit:
+                    self.deposit()
+                # withdraw
+                elif parsed_command == self.Commands.withdraw:
+                    self.withdraw()
+                # transfer
+                elif parsed_command == self.Commands.transfer:
+                    self.transfer()
+                elif parsed_command == self.Commands.help:
+                    print(self.HELP_TEXT)
             except ValueError:
                 print(FrontEndInstance.error_unrecognized_command)
-            if parsed_command == self.Commands.quit:
-                return
-            # Prevent all other commands but login before logging in
-            elif self.user_status == self.UserState.idle and parsed_command != self.Commands.login:
-                print(FrontEndInstance.not_logged_in_message)
-            # login
-            elif parsed_command == self.Commands.login:
-                if self.login():
-                    return
-            # logout
-            elif parsed_command == self.Commands.logout:
-                self.logout()
-            # createacct
-            elif parsed_command == self.Commands.createacct:
-                self.create_account()
-            # deleteacct
-            elif parsed_command == self.Commands.deleteacct:
-                self.delete_account()
-            # deposit
-            elif parsed_command == self.Commands.deposit:
-                self.deposit()
-            # withdraw
-            elif parsed_command == self.Commands.withdraw:
-                self.withdraw()
-            # transfer
-            elif parsed_command == self.Commands.transfer:
-                self.transfer()
-            elif parsed_command == self.Commands.help:
-                print(self.HELP_TEXT)
 
     def login(self) -> bool:
         """
@@ -296,7 +296,7 @@ class FrontEndInstance:
                 if parsed_login == self.UserState.atm or parsed_login == self.UserState.agent:  # Input is atm or agent
                     self.user_status = parsed_login
                     with open(self.accounts_file) as fp:
-                        self.accounts_list = fp.readlines()  # Load the accounts
+                        self.accounts_list = fp.read().splitlines()  # Load the accounts
                     print(FrontEndInstance.successful_login(parsed_login))
                     return False
             except ValueError:
@@ -326,12 +326,14 @@ class FrontEndInstance:
         if self.user_status != self.UserState.agent:  # If user not in agent state
             print(self.missing_user_state_for_command(self.UserState.agent, self.Commands.createacct))
             return
-        account_number = self.get_valid_account_number()
-        if account_number is None:  # If cancel command
-            return
-        if account_number in self.accounts_list:
-            print(FrontEndInstance.error_account_number_already_exists)
-            return
+        while True:
+            account_number = self.get_valid_account_number()
+            if account_number is None:  # If cancel command
+                return
+            if account_number in self.accounts_list:
+                print(FrontEndInstance.error_account_number_already_exists)
+                continue
+            break
         account_name = self.get_valid_account_name()
         if account_name is None:  # If cancel command
             return
@@ -453,7 +455,7 @@ class FrontEndInstance:
         :param name: name to check
         :return: True if valid 3-30 characters not starting/ending with whitespace
         """
-        return name is not None and re.search('^[\w][\w ]{1,28}[\w]$', name) is not None
+        return name is not None and re.search(r'^[\w][\w ]{1,28}[\w]$', name) is not None
 
     @staticmethod
     def valid_account_number(number: str) -> bool:
@@ -462,7 +464,7 @@ class FrontEndInstance:
         :param number: the number to check
         :return: True if account number exactly 7 digits, not starting with 0
         """
-        return number is not None and re.search('^[1-9][0-9]{6}$', number) is not None
+        return number is not None and re.search(r'^[1-9][0-9]{6}$', number) is not None
 
     @staticmethod
     def get_valid_account_number() -> str or None:
@@ -474,7 +476,7 @@ class FrontEndInstance:
             account_number = input(FrontEndInstance.input_account_number)
             if FrontEndInstance.valid_account_number(account_number):
                 return account_number
-            elif account_number == FrontEndInstance.Commands.cancel:
+            elif account_number == FrontEndInstance.Commands.cancel.value:
                 return None
             else:
                 print(FrontEndInstance.invalid_account_number)
@@ -504,7 +506,7 @@ class FrontEndInstance:
             account_name = input(FrontEndInstance.input_account_name)
             if FrontEndInstance.valid_account_name(account_name):
                 return account_name
-            elif account_name == FrontEndInstance.Commands.cancel:
+            elif account_name == FrontEndInstance.Commands.cancel.value:
                 return None
             else:
                 print(FrontEndInstance.invalid_account_name)
