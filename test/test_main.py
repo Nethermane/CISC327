@@ -8,7 +8,6 @@ import frontend as app
 
 path = os.path.dirname(os.path.abspath(__file__))
 
-
 def test_r1_t1(capsys):
     # Test login
     helper(
@@ -93,41 +92,41 @@ def test_r1_t7(capsys):
         expected_output_transactions=[]
     )
 
-# def test_r2_t1(capsys):
-#     # Verify that user can login for an atm session
-#     helper(
-#         capsys=capsys,
-#         terminal_input=[
-#             'login', 'machine', 'quit'
-#         ],
-#         input_valid_accounts=[],
-#         expected_tail_of_terminal_output=['Successfully logged in as " machine "', 'Command: '],
-#         expected_output_transactions=[]
-#     )
+def test_r2_t1(capsys):
+    # Verify that user can login for an atm session
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'login', 'machine', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Successfully logged in as "machine"', 'Command: '],
+        expected_output_transactions=[]
+    )
 
-# def test_r2_t2(capsys):
-#     # Verify that user can login for an agent session
-#     helper(
-#         capsys=capsys,
-#         terminal_input=[
-#             'login', 'agent', 'quit'
-#         ],
-#         input_valid_accounts=[],
-#         expected_tail_of_terminal_output=['Successfully logged in as " agent "'],
-#         expected_output_transactions=[]
-#     )
+def test_r2_t2(capsys):
+    # Verify that user can login for an agent session
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'login', 'agent', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Successfully logged in as "agent"', 'Command: '],
+        expected_output_transactions=[]
+    )
 
-# def test_r2_t3(capsys):
-#     # Verify that user cannot login for a non-existent session
-#     helper(
-#         capsys=capsys,
-#         terminal_input=[
-#             'login', 'mouahaha', 'quit'
-#         ],
-#         input_valid_accounts=[],
-#         expected_tail_of_terminal_output=['In idle state, please login before use'],
-#         expected_output_transactions=[]
-#     )
+def test_r2_t3(capsys):
+    # Verify that user cannot login for a non-existent session
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'login', 'mouahaha', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Error: unrecognized command: "mouahaha", login with either machine or agent', 'Select session type (machine or agent): '],
+        expected_output_transactions=[]
+    )
 
 def test_r3_t1(capsys):
     # No subsequent login acceted in machine mode
@@ -153,29 +152,29 @@ def test_r3_t2(capsys):
         expected_output_transactions=[]
     )
 
-# def test_r4_t1(capsys):
-#     # Logout should only be accepted when logged in – machine 
-#     helper(
-#         capsys=capsys,
-#         terminal_input=[
-#             'login', 'machine', 'logout', 'quit'
-#         ],
-#         input_valid_accounts=[],
-#         expected_tail_of_terminal_output=['Successfully logged out', 'Command: '],
-#         expected_output_transactions=[]
-#     )
+def test_r4_t1(capsys):
+    # Logout should only be accepted when logged in – machine 
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'login', 'machine', 'logout', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Successfully logged out', 'Command: '],
+        expected_output_transactions=['EOS 0000000 000 0000000 ***']
+    )
 
-# def test_r4_t2(capsys):
-#     # Logout should only be accepted when logged in – agent 
-#     helper(
-#         capsys=capsys,
-#         terminal_input=[
-#             'login', 'agent', 'logout', 'quit'
-#         ],
-#         input_valid_accounts=[],
-#         expected_tail_of_terminal_output=['Successfully logged out', 'Command: '],
-#         expected_output_transactions=[]
-#     )
+def test_r4_t2(capsys):
+    # Logout should only be accepted when logged in – agent 
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'login', 'agent', 'logout', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Successfully logged out', 'Command: '],
+        expected_output_transactions=["EOS 0000000 000 0000000 ***"]
+    )
 
 def test_r5_t1(capsys):
     # Priviledged transaction create account should not be accepted in machine mode 
@@ -189,15 +188,187 @@ def test_r5_t1(capsys):
         expected_output_transactions=[]
     )
 
-# def test_r5_t2(capsys):
-#     # Priviledged transaction create account should be accepted in agent mode 
+def test_r5_t2(capsys):
+    # Priviledged transaction create account should be accepted in agent mode 
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'login', 'agent', 'createacct', 'q', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Account Number: ', 'Command: '],
+        expected_output_transactions=[]
+    )
+
+
+def test_r6_t1(capsys):
+    # Create account: account number must not be < 7 numbers
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'login', 'agent', 'createacct', '123456', 'q', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Invalid account number, must be 7 digits, not beginning with a 0','Account Number: ', 'Command: '],
+        expected_output_transactions=[]
+    )
+
+def test_r6_t2(capsys):
+    # Create account: account number must not start with a 0
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'login', 'agent', 'createacct', '0123456', 'q', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Invalid account number, must be 7 digits, not beginning with a 0','Account Number: ', 'Command: '],
+        expected_output_transactions=[]
+    )
+
+def test_r6_t3(capsys):
+    # Create account: account number must not be > 7 numbers 
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'login', 'agent', 'createacct', '12345678', 'q', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Invalid account number, must be 7 digits, not beginning with a 0','Account Number: ', 'Command: '],
+        expected_output_transactions=[]
+    )
+
+def test_r6_t4(capsys):
+    # Account number must not contain non-numeric characters 
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'login', 'agent', 'createacct', 'a123456', 'q', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Invalid account number, must be 7 digits, not beginning with a 0','Account Number: ', 'Command: '],
+        expected_output_transactions=[]
+    )
+
+def test_r6_t5(capsys):
+    # Account number is valid
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'login', 'agent', 'createacct', '1234567', 'q', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Command: '],
+        expected_output_transactions=[]
+    )
+
+# def test_r17_t1(capsys):
+#
+#     '''
+#     ATM transfers can't be greater than $10000
+#     '''
+#
 #     helper(
 #         capsys=capsys,
-#         terminal_input=[
-#             'login', 'agent', 'createacct', 'quit'
-#         ],
-#         input_valid_accounts=[],
-#         expected_tail_of_terminal_output=['Successfully logged out', 'Command: '],
+#         terminal_input=['login', 'machine', 'transfer', '1234567', '1000001', 'logout', 'quit'],
+#         input_valid_accounts=['1234567', '1234566', '0000000'],
+#         expected_tail_of_terminal_output=['Successful transaction'],
+#         expected_output_transactions=['XFR 1234567 1000000 1234566 ***', 'EOS 1234567 000 0000000 ***']
+#     )
+#
+#
+# def test_r17_t2(capsys):
+#
+#     '''
+#     Atm transfers should work for <=$10000
+#     '''
+#
+#     helper(
+#         capsys=capsys,
+#         terminal_input=['login', 'machine', 'transfer', '1234567', '1234566', '1000000', 'logout', 'quit'],
+#         input_valid_accounts=['1234567', '1234566', '0000000'],
+#         expected_tail_of_terminal_output=['Successful transaction'],
+#         expected_output_transactions=['XFR 1234567 1000000 1234566 ***', 'EOS 1234567 000 0000000 ***']
+#     )
+def test_r7_t1(capsys):
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'agent', 'createacct', '1234567', 'q', 'quit'],
+        input_valid_accounts=['1234567', '0000000'],
+        expected_tail_of_terminal_output=['Error: Account number already exists',
+                                          'Account Number: ',
+                                          'Command: '],
+        expected_output_transactions=[]
+    )
+def test_r8_t1(capsys):
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'agent', 'createacct', '1234567', 'ab', 'q', 'quit'],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Invalid account name. Account number must be between 3 and 30 alphanumeric '
+                                          'characters, not beginning or ending with a space',
+                                          'Account Name: ',
+                                          'Command: '],
+        expected_output_transactions=[]
+    )
+def test_r8_t2(capsys):
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'agent', 'createacct', '1234567', 'abcdefghijklmnopqrstuvwxyzabcde', 'q', 'quit'],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Invalid account name. Account number must be between 3 and 30 alphanumeric '
+                                          'characters, not beginning or ending with a space',
+                                          'Account Name: ',
+                                          'Command: '],
+        expected_output_transactions=[]
+    )
+def test_r8_t3(capsys):
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'agent', 'createacct', '1234567', ' ab', 'q', 'quit'],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Invalid account name. Account number must be between 3 and 30 alphanumeric '
+                                          'characters, not beginning or ending with a space',
+                                          'Account Name: ',
+                                          'Command: '],
+        expected_output_transactions=[]
+    )
+def test_r8_t4(capsys):
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'agent', 'createacct', '1234567', 'ab ', 'q', 'quit'],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Invalid account name. Account number must be between 3 and 30 alphanumeric '
+                                          'characters, not beginning or ending with a space',
+                                          'Account Name: ',
+                                          'Command: '],
+        expected_output_transactions=[]
+    )
+def test_r8_t5(capsys):
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'agent', 'createacct', '1234567', 'abc', 'logout', 'quit'],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Command: ',
+                                          'Successfully logged out',
+                                          'Command: '],
+        expected_output_transactions=['NEW 1234567 000 0000000 abc', 'EOS 0000000 000 0000000 ***']
+    )
+def test_r9_t1(capsys):
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'machine', 'deleteacct', 'quit'],
+        input_valid_accounts=['1234567', '0000000'],
+        expected_tail_of_terminal_output=['Error: agent session required for deleteacct command',
+                                          'Command: '],
+        expected_output_transactions=[]
+    )
+# def test_r9_t2(capsys):
+#     helper(
+#         capsys=capsys,
+#         terminal_input=['login', 'agent', 'deleteacct', '1234566', 'quit'],
+#         input_valid_accounts=['1234567', '0000000'],
+#         expected_tail_of_terminal_output=['Error: agent session required for deleteacct command',
+#                                           'Command: '],
 #         expected_output_transactions=[]
 #     )
 
@@ -237,12 +408,9 @@ def helper(
         valid_account_list_file,
         transaction_summary_file]
 
-    for i in range(len(terminal_input)):
-        terminal_input[i] += '\n'
     # set terminal input
     sys.stdin = io.StringIO(
-        os.linesep.join(terminal_input))
-
+        '\n'.join(terminal_input))
     # run the program
     app.main(valid_account_list_file, transaction_summary_file)
 
