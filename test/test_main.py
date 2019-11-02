@@ -287,35 +287,8 @@ def test_r6_t5(capsys):
     )
 
 
-# def test_r17_t1(capsys):
-#
-#     '''
-#     ATM transfers can't be greater than $10000
-#     '''
-#
-#     helper(
-#         capsys=capsys,
-#         terminal_input=['login', 'machine', 'transfer', '1234567', '1000001', 'logout', 'quit'],
-#         input_valid_accounts=['1234567', '1234566', '0000000'],
-#         expected_tail_of_terminal_output=['Successful transaction'],
-#         expected_output_transactions=['XFR 1234567 1000000 1234566 ***', 'EOS 1234567 000 0000000 ***']
-#     )
-#
-#
-# def test_r17_t2(capsys):
-#
-#     '''
-#     Atm transfers should work for <=$10000
-#     '''
-#
-#     helper(
-#         capsys=capsys,
-#         terminal_input=['login', 'machine', 'transfer', '1234567', '1234566', '1000000', 'logout', 'quit'],
-#         input_valid_accounts=['1234567', '1234566', '0000000'],
-#         expected_tail_of_terminal_output=['Successful transaction'],
-#         expected_output_transactions=['XFR 1234567 1000000 1234566 ***', 'EOS 1234567 000 0000000 ***']
-#     )
 def test_r7_t1(capsys):
+    # Account numbers cannot be repeated
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'createacct', '1234567', 'q', 'quit'],
@@ -328,6 +301,7 @@ def test_r7_t1(capsys):
 
 
 def test_r8_t1(capsys):
+    # Account name can't have less than 3 characters
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'createacct', '1234567', 'ab', 'q', 'quit'],
@@ -341,6 +315,7 @@ def test_r8_t1(capsys):
 
 
 def test_r8_t2(capsys):
+    # Account name can't have more than 30 characters
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'createacct', '1234567', 'abcdefghijklmnopqrstuvwxyzabcde', 'q', 'quit'],
@@ -354,6 +329,7 @@ def test_r8_t2(capsys):
 
 
 def test_r8_t3(capsys):
+    # Account name can't start with a space
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'createacct', '1234567', ' ab', 'q', 'quit'],
@@ -367,6 +343,7 @@ def test_r8_t3(capsys):
 
 
 def test_r8_t4(capsys):
+    # Account name can't end with a space
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'createacct', '1234567', 'ab ', 'q', 'quit'],
@@ -380,6 +357,7 @@ def test_r8_t4(capsys):
 
 
 def test_r8_t5(capsys):
+    # Positive test case for a valid account name
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'createacct', '1234567', 'abc', 'logout', 'quit'],
@@ -392,6 +370,7 @@ def test_r8_t5(capsys):
 
 
 def test_r9_t1(capsys):
+    # Verify ATM user cannot delete accounts
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'deleteacct', 'quit'],
@@ -403,6 +382,7 @@ def test_r9_t1(capsys):
 
 
 def test_r9_t2(capsys):
+    # Verify tellers can delete accounts
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'deleteacct', 'q', 'quit'],
@@ -414,6 +394,7 @@ def test_r9_t2(capsys):
 
 
 def test_r10_t1(capsys):
+    # Verify numbers must be valid
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'deleteacct', '1234566', 'q', 'quit'],
@@ -426,6 +407,7 @@ def test_r10_t1(capsys):
 
 
 def test_r10_t2(capsys):
+    # Verify transaction accepted with valid account number
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'deleteacct', '1234566', 'q', 'quit'],
@@ -438,6 +420,7 @@ def test_r10_t2(capsys):
 
 
 def test_r10_t3(capsys):
+    # Verify transaction accepted with valid account number and provided name
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'deleteacct', '1234567', 'f12rf', 'quit'],
@@ -448,6 +431,7 @@ def test_r10_t3(capsys):
 
 
 def test_r11_t1(capsys):
+    #verify deposit checks for valid account number in valid accounts list
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'deposit', '1234567', 'q', 'quit'],
@@ -458,16 +442,7 @@ def test_r11_t1(capsys):
 
 
 def test_r11_t2(capsys):
-    helper(
-        capsys=capsys,
-        terminal_input=['login', 'agent', 'deposit', '1234567', 'q', 'quit'],
-        input_valid_accounts=['0000000'],
-        expected_tail_of_terminal_output=['Error: account number not found', 'Account Number: ', 'Command: '],
-        expected_output_transactions=[]
-    )
-
-
-def test_r11_t3(capsys):
+    # Verify invalid accounts can't deposit
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'deposit', '1234567', '1a2b', 'q', 'quit'],
@@ -478,6 +453,7 @@ def test_r11_t3(capsys):
 
 
 def test_r12_t1(capsys):
+    # Agent deposits can't be greater than $999999.99
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'deposit', '1234567', '100000000', 'q', 'quit'],
@@ -489,6 +465,7 @@ def test_r12_t1(capsys):
 
 
 def test_r12_t2(capsys):
+    # Verify agent can deposit less than or equal to $999999.99
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'deposit', '1234567', '99999999', 'quit'],
@@ -499,6 +476,7 @@ def test_r12_t2(capsys):
 
 
 def test_r12_t3(capsys):
+    # ATM deposits can't be greater than $2000
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'deposit', '1234567', '200001', 'q', 'quit'],
@@ -510,6 +488,7 @@ def test_r12_t3(capsys):
 
 
 def test_r12_t4(capsys):
+    # Verify atm deposits below $2000 can be made
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'deposit', '1234567', '200000', 'q', 'quit'],
@@ -520,6 +499,7 @@ def test_r12_t4(capsys):
 
 
 def test_r12_t5(capsys):
+    # ATM desposits over a single day can not total greater than $5000
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'deposit', '1234567', '200000',
@@ -536,6 +516,7 @@ def test_r12_t5(capsys):
 
 
 def test_r13_t1(capsys):
+    # Prevent withdrawls from invalid accounts
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'withdraw', '1234567', 'q', 'quit'],
@@ -546,6 +527,7 @@ def test_r13_t1(capsys):
 
 
 def test_r13_t2(capsys):
+    # Prevent withdrawls of invalid amounts
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'withdraw', '1234567', 'a12', 'q', 'quit'],
@@ -556,6 +538,7 @@ def test_r13_t2(capsys):
 
 
 def test_r14_t1(capsys):
+    # ATM withdrawls can't be above $1000
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'withdraw', '1234567', '100001', 'q', 'quit'],
@@ -567,6 +550,7 @@ def test_r14_t1(capsys):
 
 
 def test_r14_t2(capsys):
+    # Verify ATM withdrawl less than $1,000 work
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'withdraw', '1234567', '100000', 'quit'],
@@ -577,6 +561,7 @@ def test_r14_t2(capsys):
 
 
 def test_r14_t3(capsys):
+    # Agent withdrawls can't be greater than $999999.99
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'withdraw', '1234567', '100000000', 'q', 'quit'],
@@ -588,6 +573,7 @@ def test_r14_t3(capsys):
 
 
 def test_r14_t4(capsys):
+    # Verify agent withdrawls <=$999,999.99 work
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'withdraw', '1234567', '99999999', 'logout', 'quit'],
@@ -598,6 +584,7 @@ def test_r14_t4(capsys):
 
 
 def test_r15_t1(capsys):
+    # ATM withdrawls over a single day can not total greater than $5000
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'withdraw', '1234567', '100000',
@@ -619,10 +606,7 @@ def test_r15_t1(capsys):
 
 
 def test_r16_t1(capsys):
-    '''
-    Prevent transfers from invalid accounts
-    '''
-
+    # Prevent transfers from invalid accounts
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'transfer', '1234567', 'q', 'quit'],
@@ -635,10 +619,7 @@ def test_r16_t1(capsys):
 
 
 def test_r16_t2(capsys):
-    '''
-    Prevent tansfers to invalid account
-    '''
-
+    # Prevent tansfers to invalid account
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'transfer', '1234567', '1234566', 'q', 'quit'],
@@ -651,10 +632,7 @@ def test_r16_t2(capsys):
 
 
 def test_r16_t3(capsys):
-    '''
-    Prevent withdrawls of invalid amounts
-    '''
-
+    # Prevent withdrawls of invalid amounts
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'withdraw', '1234567', 'q', 'quit'],
@@ -667,10 +645,7 @@ def test_r16_t3(capsys):
 
 
 def test_r17_t1(capsys):
-    '''
-    ATM transfers can't be greater than $10000
-    '''
-
+    # ATM transfers can't be greater than $10000
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'transfer', '1234566', '1234567', '1000001', 'q', 'quit'],
@@ -683,10 +658,7 @@ def test_r17_t1(capsys):
 
 
 def test_r17_t2(capsys):
-    '''
-    Atm transfers should work for <=$10000
-    '''
-
+    # Atm transfers should work for <=$10000
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'transfer', '1234566', '1234567', '1000000', 'logout', 'quit'],
@@ -707,10 +679,7 @@ def test_r17_t2(capsys):
 
 
 def test_r17_t3(capsys):
-    '''
-    Total number of ATM transfers out of an account cannot be >$10,000
-    '''
-
+    # Total number of ATM transfers out of an account cannot be >$10,000
     helper(
         capsys=capsys,
         terminal_input=['login', 'machine', 'transfer', '1234566', '1234567', '500000',
@@ -724,10 +693,7 @@ def test_r17_t3(capsys):
 
 
 def test_r17_t4(capsys):
-    '''
-    Teller mode transfers can't be greater than $999999.99
-    '''
-
+    # Teller mode transfers can't be greater than $999999.99
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'transfer', '1234566', '1234567', '100000000', 'q', 'quit'],
@@ -740,10 +706,7 @@ def test_r17_t4(capsys):
 
 
 def test_r17_t5(capsys):
-    '''
-    Teller should be able to transfer <= 999,999.99
-    '''
-
+    # Teller should be able to transfer <= 999,999.99
     helper(
         capsys=capsys,
         terminal_input=['login', 'agent', 'transfer', '1234566', '1234567', '99999999', 'logout', 'quit'],
