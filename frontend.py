@@ -368,6 +368,8 @@ class FrontEndInstance:
             print(FrontEndInstance.must_be_signed_in_for_command(self.Commands.deposit))
             return
         account_number = self.get_account_number_in_list()
+        if account_number is None:
+            return
         while True:
             # Check number less than max single transaction
             cents = FrontEndInstance.get_valid_numeric_amount(
