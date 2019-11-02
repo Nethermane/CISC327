@@ -201,7 +201,7 @@ class FrontEndInstance:
         :param command: command being entered
         :return: string stating an error for missing command
         """
-        return 'Error: ' + state.value + 'session required for ' + command.value + ' command '
+        return 'Error: ' + state.value + ' session required for ' + command.value + ' command'
 
     @staticmethod
     def successful_login(session_type: UserState) -> str:

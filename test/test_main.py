@@ -10,47 +10,196 @@ path = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_r1_t1(capsys):
-
+    # Test login
     helper(
         capsys=capsys,
         terminal_input=[
             'login', 'quit'
         ],
         input_valid_accounts=[],
-        expected_tail_of_terminal_output=[app.FrontEndInstance.LOGIN_MESSAGE],
+        expected_tail_of_terminal_output=['Select session type (machine or agent): '],
         expected_output_transactions=[]
     )
 
-
-def test_r17_t1(capsys):
-
-    '''
-    ATM transfers can't be greater than $10000
-    '''
-
+def test_r1_t2(capsys):
+    # Cannot logout in idle state
     helper(
         capsys=capsys,
-        terminal_input=['login', 'machine', 'transfer', '1234567', '1000001', 'logout', 'quit'],
-        input_valid_accounts=['1234567', '1234566', '0000000'],
-        expected_tail_of_terminal_output=['Successful transaction'],
-        expected_output_transactions=['XFR 1234567 1000000 1234566 ***', 'EOS 1234567 000 0000000 ***']
+        terminal_input=[
+            'logout', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['In idle state, please login before use', 'Command: '],
+        expected_output_transactions=[]
     )
 
-
-def test_r17_t2(capsys):
-
-    '''
-    Atm transfers should work for <=$10000
-    '''
-
+def test_r1_t3(capsys):
+    # Cannot create account in idle state
     helper(
         capsys=capsys,
-        terminal_input=['login', 'machine', 'transfer', '1234567', '1234566', '1000000', 'logout', 'quit'],
-        input_valid_accounts=['1234567', '1234566', '0000000'],
-        expected_tail_of_terminal_output=['Successful transaction'],
-        expected_output_transactions=['XFR 1234567 1000000 1234566 ***', 'EOS 1234567 000 0000000 ***']
+        terminal_input=[
+            'createacct', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['In idle state, please login before use', 'Command: '],
+        expected_output_transactions=[]
     )
 
+def test_r1_t4(capsys):
+    # Cannot delete account in idle state
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'deleteacct', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['In idle state, please login before use', 'Command: '],
+        expected_output_transactions=[]
+    )
+
+def test_r1_t5(capsys):
+    # Cannot deposit in idle state
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'deposit', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['In idle state, please login before use', 'Command: '],
+        expected_output_transactions=[]
+    )
+
+def test_r1_t6(capsys):
+    # Cannot withdraw in idle state
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'withdraw', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['In idle state, please login before use', 'Command: '],
+        expected_output_transactions=[]
+    )
+    
+def test_r1_t7(capsys):
+    # Cannot transfer in idle state
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'transfer', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['In idle state, please login before use', 'Command: '],
+        expected_output_transactions=[]
+    )
+
+# def test_r2_t1(capsys):
+#     # Verify that user can login for an atm session
+#     helper(
+#         capsys=capsys,
+#         terminal_input=[
+#             'login', 'machine', 'quit'
+#         ],
+#         input_valid_accounts=[],
+#         expected_tail_of_terminal_output=['Successfully logged in as " machine "', 'Command: '],
+#         expected_output_transactions=[]
+#     )
+
+# def test_r2_t2(capsys):
+#     # Verify that user can login for an agent session
+#     helper(
+#         capsys=capsys,
+#         terminal_input=[
+#             'login', 'agent', 'quit'
+#         ],
+#         input_valid_accounts=[],
+#         expected_tail_of_terminal_output=['Successfully logged in as " agent "'],
+#         expected_output_transactions=[]
+#     )
+
+# def test_r2_t3(capsys):
+#     # Verify that user cannot login for a non-existent session
+#     helper(
+#         capsys=capsys,
+#         terminal_input=[
+#             'login', 'mouahaha', 'quit'
+#         ],
+#         input_valid_accounts=[],
+#         expected_tail_of_terminal_output=['In idle state, please login before use'],
+#         expected_output_transactions=[]
+#     )
+
+def test_r3_t1(capsys):
+    # No subsequent login acceted in machine mode
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'login', 'machine', 'login', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Error: already logged in', 'Command: '],
+        expected_output_transactions=[]
+    )
+
+def test_r3_t2(capsys):
+    # No subsequent login accepted in agent mode
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'login', 'agent', 'login', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Error: already logged in', 'Command: '],
+        expected_output_transactions=[]
+    )
+
+# def test_r4_t1(capsys):
+#     # Logout should only be accepted when logged in – machine 
+#     helper(
+#         capsys=capsys,
+#         terminal_input=[
+#             'login', 'machine', 'logout', 'quit'
+#         ],
+#         input_valid_accounts=[],
+#         expected_tail_of_terminal_output=['Successfully logged out', 'Command: '],
+#         expected_output_transactions=[]
+#     )
+
+# def test_r4_t2(capsys):
+#     # Logout should only be accepted when logged in – agent 
+#     helper(
+#         capsys=capsys,
+#         terminal_input=[
+#             'login', 'agent', 'logout', 'quit'
+#         ],
+#         input_valid_accounts=[],
+#         expected_tail_of_terminal_output=['Successfully logged out', 'Command: '],
+#         expected_output_transactions=[]
+#     )
+
+def test_r5_t1(capsys):
+    # Priviledged transaction create account should not be accepted in machine mode 
+    helper(
+        capsys=capsys,
+        terminal_input=[
+            'login', 'machine', 'createacct', 'quit'
+        ],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Error: agent session required for createacct command', 'Command: '],
+        expected_output_transactions=[]
+    )
+
+# def test_r5_t2(capsys):
+#     # Priviledged transaction create account should be accepted in agent mode 
+#     helper(
+#         capsys=capsys,
+#         terminal_input=[
+#             'login', 'agent', 'createacct', 'quit'
+#         ],
+#         input_valid_accounts=[],
+#         expected_tail_of_terminal_output=['Successfully logged out', 'Command: '],
+#         expected_output_transactions=[]
+#     )
 
 def helper(
         capsys,
