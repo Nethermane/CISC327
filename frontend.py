@@ -181,7 +181,7 @@ class FrontEndInstance:
     input_command: str = 'Command: \n'
     input_from: str = 'From: \n'
     input_to: str = 'To: \n'
-    invalid_account_name: str = 'Invalid account name. Account number must be between 3 and 30 alphanumeric ' \
+    invalid_account_name: str = 'Invalid account name. Account name must be between 3 and 30 alphanumeric ' \
                                 'characters, not beginning or ending with a space'
     invalid_account_number: str = 'Invalid account number, must be 7 digits, not beginning with a 0'
     not_logged_in_message: str = 'In idle state, please login before use'
