@@ -13,10 +13,10 @@ def test_r1_t1(capsys):
     helper(
         capsys=capsys,
         terminal_input=[
-            'login', 'quit'
+            'login', 'q', 'quit'
         ],
         input_valid_accounts=[],
-        expected_tail_of_terminal_output=['Select session type (machine or agent): '],
+        expected_tail_of_terminal_output=['Select session type (machine or agent): ', 'Command: '],
         expected_output_transactions=[]
     )
 
@@ -121,10 +121,11 @@ def test_r2_t3(capsys):
     helper(
         capsys=capsys,
         terminal_input=[
-            'login', 'mouahaha', 'quit'
+            'login', 'mouahaha', 'q', 'quit'
         ],
         input_valid_accounts=[],
-        expected_tail_of_terminal_output=['Error: unrecognized command: "mouahaha", login with either machine or agent', 'Select session type (machine or agent): '],
+        expected_tail_of_terminal_output=['Error: unrecognized command: "mouahaha", login with either machine or agent',
+                                          'Select session type (machine or agent): ', 'Command: '],
         expected_output_transactions=[]
     )
 

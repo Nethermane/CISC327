@@ -256,8 +256,7 @@ class FrontEndInstance:
                     print(FrontEndInstance.not_logged_in_message)
                 # login
                 elif parsed_command == self.Commands.login:
-                    if self.login():
-                        return
+                    self.login()
                 # logout
                 elif parsed_command == self.Commands.logout:
                     self.logout()
@@ -281,14 +280,14 @@ class FrontEndInstance:
             except ValueError:
                 print(FrontEndInstance.error_unrecognized_command)
 
-    def login(self) -> bool:
+    def login(self) -> None:
         """
         Method allowing users to log into a user state (atm or teller)
         Returns true if the user entered exit
         """
         if self.user_status != self.UserState.idle:  # if already signed in
             print(FrontEndInstance.error_logged_in_login)
-            return False
+            return
         while True:
             user_input = input(self.LOGIN_MESSAGE)
             try:
@@ -299,12 +298,12 @@ class FrontEndInstance:
                         self.accounts_list = fp.read().splitlines()  # Load the accounts
                         if '0000000' in self.accounts_list: self.accounts_list.remove('0000000')
                     print(FrontEndInstance.successful_login(parsed_login))
-                    return False
+                    return
             except ValueError:
                 if user_input == self.Commands.cancel.value:  # If cancel command inputted
-                    return False
+                    return
                 elif user_input == self.Commands.quit.value:
-                    return True
+                    return
                 print(FrontEndInstance.unrecognized_login_command(user_input))
                 continue
 
