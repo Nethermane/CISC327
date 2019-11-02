@@ -297,6 +297,7 @@ class FrontEndInstance:
                     self.user_status = parsed_login
                     with open(self.accounts_file) as fp:
                         self.accounts_list = fp.read().splitlines()  # Load the accounts
+                        if '0000000' in self.accounts_list: self.accounts_list.remove('0000000')
                     print(FrontEndInstance.successful_login(parsed_login))
                     return False
             except ValueError:
@@ -349,7 +350,7 @@ class FrontEndInstance:
         if self.user_status != self.UserState.agent:  # If user not in agent state
             print(self.missing_user_state_for_command(self.UserState.agent, self.Commands.deleteacct))
             return
-        account_number = self.get_valid_account_number()
+        account_number = self.get_account_number_in_list()
         if account_number is None:  # If cancel command inputted
             return
         account_name = self.get_valid_account_name()
@@ -397,6 +398,8 @@ class FrontEndInstance:
             print(FrontEndInstance.must_be_signed_in_for_command(self.Commands.withdraw))
             return
         account_number = self.get_account_number_in_list()
+        if account_number is None:
+            return
         while True:
             # Get number less than max single transaction
             cents = FrontEndInstance.get_valid_numeric_amount(
@@ -491,7 +494,7 @@ class FrontEndInstance:
             account_number = input(prompt)
             if account_number in self.accounts_list:
                 return account_number
-            elif account_number == self.Commands.cancel:
+            elif account_number == self.Commands.cancel.value:
                 return None
             else:
                 print(FrontEndInstance.error_account_not_found)
@@ -527,7 +530,7 @@ class FrontEndInstance:
                 else:
                     print(FrontEndInstance.error_cents_less_than_or_equal(str(max_value)))
             except ValueError:
-                if cents == FrontEndInstance.Commands.cancel:
+                if cents == FrontEndInstance.Commands.cancel.value:
                     return None
                 print(FrontEndInstance.parse_number_error)
 
