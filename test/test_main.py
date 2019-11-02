@@ -79,7 +79,7 @@ def test_r1_t6(capsys):
         expected_tail_of_terminal_output=['In idle state, please login before use', 'Command: '],
         expected_output_transactions=[]
     )
-    
+
 def test_r1_t7(capsys):
     # Cannot transfer in idle state
     helper(
@@ -153,7 +153,7 @@ def test_r3_t2(capsys):
     )
 
 def test_r4_t1(capsys):
-    # Logout should only be accepted when logged in – machine 
+    # Logout should only be accepted when logged in – machine
     helper(
         capsys=capsys,
         terminal_input=[
@@ -165,7 +165,7 @@ def test_r4_t1(capsys):
     )
 
 def test_r4_t2(capsys):
-    # Logout should only be accepted when logged in – agent 
+    # Logout should only be accepted when logged in – agent
     helper(
         capsys=capsys,
         terminal_input=[
@@ -177,7 +177,7 @@ def test_r4_t2(capsys):
     )
 
 def test_r5_t1(capsys):
-    # Priviledged transaction create account should not be accepted in machine mode 
+    # Priviledged transaction create account should not be accepted in machine mode
     helper(
         capsys=capsys,
         terminal_input=[
@@ -189,7 +189,7 @@ def test_r5_t1(capsys):
     )
 
 def test_r5_t2(capsys):
-    # Priviledged transaction create account should be accepted in agent mode 
+    # Priviledged transaction create account should be accepted in agent mode
     helper(
         capsys=capsys,
         terminal_input=[
@@ -226,7 +226,7 @@ def test_r6_t2(capsys):
     )
 
 def test_r6_t3(capsys):
-    # Create account: account number must not be > 7 numbers 
+    # Create account: account number must not be > 7 numbers
     helper(
         capsys=capsys,
         terminal_input=[
@@ -238,7 +238,7 @@ def test_r6_t3(capsys):
     )
 
 def test_r6_t4(capsys):
-    # Account number must not contain non-numeric characters 
+    # Account number must not contain non-numeric characters
     helper(
         capsys=capsys,
         terminal_input=[
@@ -371,6 +371,160 @@ def test_r9_t1(capsys):
 #                                           'Command: '],
 #         expected_output_transactions=[]
 #     )
+
+
+def test_r16_t1(capsys):
+
+    '''
+    Prevent transfers from invalid accounts
+    '''
+
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'machine', 'transfer', '1234567', 'q', 'quit'],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Error: account number not found',
+                                          'From: ',
+                                          'Command: '],
+        expected_output_transactions=[]
+    )
+
+
+def test_r16_t2(capsys):
+
+    '''
+    Prevent tansfers to invalid account
+    '''
+
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'machine', 'transfer', '1234567', '1234566', 'q', 'quit'],
+        input_valid_accounts=['1234567'],
+        expected_tail_of_terminal_output=['Error: account number not found',
+                                          'To: ',
+                                          'Command: '],
+        expected_output_transactions=[]
+    )
+
+
+def test_r16_t3(capsys):
+
+    '''
+    Prevent withdrawls of invalid amounts
+    '''
+
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'machine', 'withdraw', '1234567', 'q', 'quit'],
+        input_valid_accounts=[],
+        expected_tail_of_terminal_output=['Error: account number not found',
+                                          'Account Number: ',
+                                          'Command: '],
+        expected_output_transactions=[]
+    )
+
+
+def test_r17_t1(capsys):
+
+    '''
+    ATM transfers can't be greater than $10000
+    '''
+
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'machine', 'transfer', '1234566', '1234567', '1000001', 'q', 'quit'],
+        input_valid_accounts=['1234567', '1234566'],
+        expected_tail_of_terminal_output=['Error: must be less than or equal to 1000000 cents',
+                                          'Amount(cents): ',
+                                          'Command: '],
+        expected_output_transactions=['EOS 0000000 000 0000000 ***']
+    )
+
+
+def test_r17_t2(capsys):
+
+    '''
+    Atm transfers should work for <=$10000
+    '''
+
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'machine', 'transfer', '1234566', '1234567', '1000000', 'logout', 'quit'],
+        input_valid_accounts=['1234567', '1234566'],
+        expected_tail_of_terminal_output=['Command: ',
+                                          'Select session type (machine or agent): ',
+                                          'Successfully logged in as "machine"',
+                                          'Command: ',
+                                          'From: ',
+                                          'To: ',
+                                          'Amount(cents): ',
+                                          'Transfer successful',
+                                          'Command: ',
+                                          'Successfully logged out',
+                                          'Command: '],
+        expected_output_transactions=['XFR 1234567 1000000 1234566 ***', 'EOS 0000000 000 0000000 ***']
+    )
+
+
+def test_r17_t3(capsys):
+
+    '''
+    Total number of ATM transfers out of an account cannot be >$10,000
+    '''
+
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'machine', 'transfer', '1234566', '1234567', '500000',
+                        'transfer', '1234566', '1234567', '500001', 'q', 'quit'],
+        input_valid_accounts=['1234567', '1234566'],
+        expected_tail_of_terminal_output=['Error: transfer over limit',
+                                          'Amount(cents): ',
+                                          'Command: '],
+        expected_output_transactions=['XFR 1234567 500000 1234566 ***']
+    )
+
+
+def test_r17_t4(capsys):
+
+    '''
+    Teller mode transfers can't be greater than $999999.99
+    '''
+
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'agent', 'transfer', '1234566', '1234567', '100000000', 'q', 'quit'],
+        input_valid_accounts=['1234567', '1234566'],
+        expected_tail_of_terminal_output=['Error: must be less than or equal to 99999999 cents',
+                                          'Amount(cents): ',
+                                          'Command: '],
+        expected_output_transactions=[]
+    )
+
+
+def test_r17_t5(capsys):
+
+    '''
+    Teller should be able to transfer <= 999,999.99
+    '''
+
+    helper(
+        capsys=capsys,
+        terminal_input=['login', 'agent', 'transfer', '1234566', '1234567', '99999999', 'logout', 'quit'],
+        input_valid_accounts=['1234567', '1234566'],
+        expected_tail_of_terminal_output=['Command: ',
+                                          'Select session type (machine or agent): ',
+                                          'Successfully logged in as "agent"',
+                                          'Command: ',
+                                          'From: ',
+                                          'To: ',
+                                          'Amount(cents): ',
+                                          'Transfer successful',
+                                          'Command: ',
+                                          'Successfully logged out',
+                                          'Command: '],
+        expected_output_transactions=['XFR 1234567 99999999 1234566 ***', 'EOS 0000000 000 0000000 ***']
+    )
+
 
 def helper(
         capsys,
