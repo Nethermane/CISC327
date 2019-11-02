@@ -429,8 +429,15 @@ class FrontEndInstance:
         if self.user_status == self.UserState.idle:
             print(FrontEndInstance.must_be_signed_in_for_command(self.Commands.withdraw))
             return
+
         from_account = self.get_account_number_in_list(self.input_from)
+        if from_account is None:
+            return
+
         to_account = self.get_account_number_in_list(self.input_to)
+        if to_account is None:
+            return
+
         while True:
             # Check number less than max single transaction
             cents = self.get_valid_numeric_amount(
