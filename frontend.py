@@ -542,12 +542,12 @@ class FrontEndInstance:
                 print(FrontEndInstance.parse_number_error)
 
 
-def main(accounts_file_input, transaction_summary_file_input):
-    FrontEndInstance(accounts_file_input, transaction_summary_file_input).front_end_loop()
+def main():
+    FrontEndInstance(os.path.normpath(sys.argv[1]), os.path.normpath(sys.argv[2])).front_end_loop()
 
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         print('Invalid usage, must be of the format "frontend accounts_file.txt transaction_summary.txt"')
         exit(1)
-    main(os.path.normpath(sys.argv[1]), os.path.normpath(sys.argv[2]))
+    main()

@@ -775,7 +775,7 @@ def helper(
     sys.stdin = io.StringIO(
         '\n'.join(terminal_input))
     # run the program
-    app.main(valid_account_list_file, transaction_summary_file)
+    app.main()
 
     # capture terminal output / errors
     # assuming that in this case we don't use stderr
