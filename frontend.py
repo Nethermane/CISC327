@@ -165,7 +165,8 @@ class FrontEndInstance:
                                     Commands.transfer]
     LOGIN_MESSAGE: str = 'Select session type (' + UserState.atm.value + ' or ' + UserState.agent.value + '): \n'
     HELP_TEXT: str = 'Accepted commands: ' + ', '.join(map(lambda c: c.value, ATM_COMMANDS)) + ', ' \
-                     + ', '.join(map(lambda c: c.value, PRIVILEGED_COMMANDS))
+                     + ', '.join(map(lambda c: c.value, PRIVILEGED_COMMANDS)) + ". Press " + Commands.cancel.value \
+                     + " at any time to return to main menu"
     error_account_not_found: str = 'Error: account number not found'
     error_deposit_over_max: str = 'Error: deposit over limit'
     error_logged_in_login: str = 'Error: already logged in'
