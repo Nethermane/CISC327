@@ -5,6 +5,103 @@ import sys
 from typing import List
 
 
+class TransactionSummaryKeys(enum.Enum):
+    """Enum for all the Transaction summary acronyms"""
+    deposit: str = 'DEP'
+    withdraw: str = 'WDR'
+    transfer: str = 'XFR'
+    createacct: str = 'NEW'
+    deleteacct: str = 'DEL'
+    end_of_file: str = 'EOS'
+
+    def __str__(self) -> str:
+        return self.value
+
+
+class TransactionSummary(list):
+    """
+    Object to represent a transaction summary, has functionality to write to file
+    :param summary_file: The file which will be written to
+    """
+
+    def __init__(self, summary_file=None) -> None:
+        super().__init__()
+        self.summary_file = summary_file
+
+    class TransactionSummaryRow:
+        """
+        Object to represent a single row in a transaction summary.
+        :param transaction_type: The transactionType
+        :param to: The account to send to
+        :param cents: The cents to write to
+        :param from_act: The account to send from
+        :param name: the account name
+        """
+
+
+        # TransactionSummaryRow
+        def __init__(self, transaction_type: TransactionSummaryKeys, to: str, cents: str,
+                     from_act: str, name: str) -> None:
+            self.transaction_type: TransactionSummaryKeys = transaction_type
+            self.to: str = to
+            self.cents: str = cents
+            self.from_act: str = from_act
+            self.name: str = name
+
+        def __str__(self) -> str:
+            return str(self.transaction_type) \
+                   + ' ' + self.to \
+                   + ' ' + self.cents \
+                   + ' ' + self.from_act \
+                   + ' ' + self.name
+
+    def add_row(self, transaction_type: TransactionSummaryKeys, to: str = '0000000',
+                cents: str = '000',
+                from_act: str = '0000000', name: str = '***') -> None:
+        """
+        Method to add a new row to the transaction summary
+        :param transaction_type: The transactionType
+        :param to: The account to send to
+        :param cents: The cents to write to
+        :param from_act: The account to send from
+        :param name: the account name
+        """
+        self.append(self.TransactionSummaryRow(transaction_type, to, cents, from_act, name))
+
+    def total_within_daily_limit(self, output_key: TransactionSummaryKeys,
+                                 account_number: str, amount: int, limit: int) -> bool:
+        """
+        Check if a transaction is within the current daily limit, by summing the interactions of the same type on
+        the specific account
+        :param output_key: The transactionType
+        :param account_number: The account number to check against
+        :param amount: The amount of cents to add/transfer/withdraw
+        :param limit: The limit for that type of transaction
+        :return: Returns true if transaction within daily limit
+        """
+        # If transfer or withdraw match the from account
+        if (output_key == TransactionSummaryKeys.transfer
+                or output_key == TransactionSummaryKeys.withdraw):
+            transactions_to_sum = filter(
+                lambda row: row.transaction_type == output_key and account_number == row.from_act, self)
+        # Otherwise look at the to account
+        else:
+            transactions_to_sum = filter(
+                lambda row: row.transaction_type == output_key and account_number == row.to, self)
+
+        return sum(map(lambda row: int(row.cents), transactions_to_sum)) <= (limit - amount)
+
+    def to_file(self) -> None:
+        """
+        Writes the transaction summary to file and clears it
+        """
+        self.add_row(TransactionSummaryKeys.end_of_file)
+        os.makedirs(os.path.dirname(self.summary_file), exist_ok=True)  # make all folders and file if necessary
+        with open(self.summary_file, 'w') as fp:
+            fp.write('\n'.join(map(lambda row: str(row), self)))
+        self.clear()
+
+
 class FrontEndInstance:
     """
     This is a class to represent an instance of the front end.
@@ -20,7 +117,7 @@ class FrontEndInstance:
 
         self.accounts_file: str = accounts_file
         self.user_status: self.UserState = self.UserState('idle')
-        self.transaction_summary: self.TransactionSummary = self.TransactionSummary(transaction_summary_file)
+        self.transaction_summary: TransactionSummary = TransactionSummary(transaction_summary_file)
         self.accounts_list: List[str] = []
 
     # Const max values that are relevant to this class and should be easy to find
@@ -59,106 +156,6 @@ class FrontEndInstance:
         def __str__(self):
             return self.value
 
-    class TransactionSummary:
-        """
-        Object to represent a transaction summary, has functionality to write to file
-        :param summary_file: The file which will be written to
-        """
-
-        def __init__(self, summary_file) -> None:
-            self._summary: List[self.TransactionSummaryRow] = []
-            self.summary_file = summary_file
-
-        class TransactionSummaryRow:
-            """
-            Object to represent a single row in a transaction summary.
-            :param transaction_type: The transactionType
-            :param to: The account to send to
-            :param cents: The cents to write to
-            :param from_act: The account to send from
-            :param name: the account name
-            """
-
-            class TransactionSummaryKeys(enum.Enum):
-                """Enum for all the Transaction summary acronyms"""
-                deposit: str = 'DEP'
-                withdraw: str = 'WDR'
-                transfer: str = 'XFR'
-                createacct: str = 'NEW'
-                deleteacct: str = 'DEL'
-                end_of_file: str = 'EOS'
-
-                def __str__(self) -> str:
-                    return self.value
-
-            # TransactionSummaryRow
-            def __init__(self, transaction_type: TransactionSummaryKeys, to: str, cents: str,
-                         from_act: str, name: str) -> None:
-                self.transaction_type: self.TransactionSummaryKeys = transaction_type
-                self.to: str = to
-                self.cents: str = cents
-                self.from_act: str = from_act
-                self.name: str = name
-
-            def __str__(self) -> str:
-                return str(self.transaction_type) \
-                       + ' ' + self.to \
-                       + ' ' + self.cents \
-                       + ' ' + self.from_act \
-                       + ' ' + self.name
-
-        def add_row(self, transaction_type: TransactionSummaryRow.TransactionSummaryKeys, to: str = '0000000',
-                    cents: str = '000',
-                    from_act: str = '0000000', name: str = '***') -> None:
-            """
-            Method to add a new row to the transaction summary
-            :param transaction_type: The transactionType
-            :param to: The account to send to
-            :param cents: The cents to write to
-            :param from_act: The account to send from
-            :param name: the account name
-            """
-            self._summary.append(self.TransactionSummaryRow(transaction_type, to, cents, from_act, name))
-
-        def clear(self) -> None:
-            """
-            Method to clear the current transaction summary
-            """
-            self._summary.clear()
-
-        def total_within_daily_limit(self, output_key: TransactionSummaryRow.TransactionSummaryKeys,
-                                     account_number: str, amount: int, limit: int) -> bool:
-            """
-            Check if a transaction is within the current daily limit, by summing the interactions of the same type on
-            the specific account
-            :param output_key: The transactionType
-            :param account_number: The account number to check against
-            :param amount: The amount of cents to add/transfer/withdraw
-            :param limit: The limit for that type of transaction
-            :return: Returns true if transaction within daily limit
-            """
-            # If transfer or withdraw match the from account
-            if (output_key == self.TransactionSummaryRow.TransactionSummaryKeys.transfer
-                    or output_key == self.TransactionSummaryRow.TransactionSummaryKeys.withdraw):
-                transactions_to_sum = filter(
-                    lambda row: row.transaction_type == output_key and account_number == row.from_act, self._summary)
-            # Otherwise look at the to account
-            else:
-                transactions_to_sum = filter(
-                    lambda row: row.transaction_type == output_key and account_number == row.to, self._summary)
-
-            return sum(map(lambda row: int(row.cents), transactions_to_sum)) <= (limit - amount)
-
-        def to_file(self) -> None:
-            """
-            Writes the transaction summary to file and clears it
-            """
-            self.add_row(self.TransactionSummaryRow.TransactionSummaryKeys.end_of_file)
-            os.makedirs(os.path.dirname(self.summary_file), exist_ok=True)  # make all folders and file if necessary
-            with open(self.summary_file, 'w') as fp:
-                fp.write('\n'.join(map(lambda row: str(row), self._summary)))
-            self.clear()
-
     # Constant strings that are used for printing
     PRIVILEGED_COMMANDS: List[Commands] = [Commands.createacct, Commands.deleteacct]
     ATM_COMMANDS: List[Commands] = [Commands.login, Commands.logout, Commands.deposit, Commands.withdraw,
@@ -175,6 +172,7 @@ class FrontEndInstance:
     error_withdraw_over_max: str = 'Error: withdraw over limit'
     error_transfer_over_max: str = 'Error: transfer over limit'
     error_account_number_already_exists: str = 'Error: Account number already exists'
+    error_numeric_not_positive: str = 'Error: Amount must be positive'
     first_launch_message: str = 'Welcome to Quinterac banking, type login to begin'
     input_account_name: str = 'Account Name: \n'
     input_account_number: str = 'Account Number: \n'
@@ -339,7 +337,7 @@ class FrontEndInstance:
         if account_name is None:  # If cancel command
             return
         self.transaction_summary.add_row(
-            self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.createacct,
+            TransactionSummaryKeys.createacct,
             to=account_number, name=account_name)
         print(FrontEndInstance.successful_create)
 
@@ -357,7 +355,7 @@ class FrontEndInstance:
         if account_name is None:  # If cancel command inputted
             return
         self.transaction_summary.add_row(
-            self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.deleteacct,
+            TransactionSummaryKeys.deleteacct,
             to=account_number, name=account_name)
         print(FrontEndInstance.successful_delete)
 
@@ -380,12 +378,12 @@ class FrontEndInstance:
             # Check if total deposits that day less than total or in agent mode
             if (self.user_status == self.UserState.agent
                     or self.transaction_summary.total_within_daily_limit(
-                        self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.deposit,
+                        TransactionSummaryKeys.deposit,
                         account_number,
                         int(cents),
                         self.MAX_DEPOSIT_ATM_DAILY)):
                 self.transaction_summary.add_row(
-                    self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.deposit,
+                    TransactionSummaryKeys.deposit,
                     to=account_number, cents=cents)
                 print(FrontEndInstance.successful_deposit)
                 return
@@ -412,12 +410,12 @@ class FrontEndInstance:
             # Check if total withdraw less than total limit, or in agent mode
             if (self.user_status == self.UserState.agent
                     or self.transaction_summary.total_within_daily_limit(
-                        self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.withdraw,
+                        TransactionSummaryKeys.withdraw,
                         account_number,
                         int(cents),
                         self.MAX_WITHDRAW_ATM_DAILY)):
                 self.transaction_summary.add_row(
-                    self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.withdraw,
+                    TransactionSummaryKeys.withdraw,
                     cents=cents, from_act=account_number)
                 print(FrontEndInstance.successful_withdraw)
                 return
@@ -448,12 +446,12 @@ class FrontEndInstance:
                 return
             # Check if total transfer less than total limit, or in agent mode
             if (self.user_status == self.UserState.agent or self.transaction_summary.total_within_daily_limit(
-                    self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.transfer,
+                    TransactionSummaryKeys.transfer,
                     from_account,
                     int(cents),
                     self.MAX_TRANSFER_ATM_ONCE)):
                 self.transaction_summary.add_row(
-                    self.TransactionSummary.TransactionSummaryRow.TransactionSummaryKeys.transfer,
+                    TransactionSummaryKeys.transfer,
                     to_account, cents, from_account)
                 print(FrontEndInstance.successful_transfer)
                 return
@@ -534,7 +532,9 @@ class FrontEndInstance:
             cents = input(FrontEndInstance.input_cents).replace(',', '')
             try:
                 cents_int = int(cents)
-                if cents_int <= max_value:
+                if cents_int <= 0:
+                    print(FrontEndInstance.error_numeric_not_positive)
+                elif cents_int <= max_value:
                     return str(cents_int)
                 else:
                     print(FrontEndInstance.error_cents_less_than_or_equal(str(max_value)))
