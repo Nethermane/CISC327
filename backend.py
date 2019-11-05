@@ -44,19 +44,21 @@ def parse_backend(master_accounts_file, merged_transaction_summary_file):
                     if int(master_accounts[row.from_act][0]) > int(row.cents):
                         master_accounts[row.from_act][0] = int(master_accounts[row.from_act][0]) - int(row.cents)
                     else:
-                        print("Balance cannot be below 0")
+                        print("Can't transfer more money than account has")
             elif row.transaction_type == TransactionSummaryKeys.transfer:
                 if row.from_act in master_accounts and row.to in master_accounts:
                     if int(master_accounts[row.from_act][0]) > int(row.cents):
                         master_accounts[row.from_act][0] = int(master_accounts[row.from_act][0]) - int(row.cents)
                         master_accounts[row.to][0] = int(master_accounts[row.to][0]) + int(row.cents)
+                    else:
+                        print("Can't withdraw more money than account has")
             elif row.transaction_type == TransactionSummaryKeys.createacct:
                 if row.to not in master_accounts:
                     master_accounts[row.to] = (0, row.name)
             elif row.transaction_type == TransactionSummaryKeys.deleteacct:
                 if row.to in master_accounts:
                     if row.name == master_accounts[row.to][1]:
-                        if master_accounts[row.cents][0] == 0:
+                        if int(master_accounts[row.cents][0]) == 0:
                             del master_accounts[row.to]
                         else:
                             print("Can't delete an account with a non-zero balance")
