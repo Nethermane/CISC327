@@ -43,14 +43,14 @@ def parse_backend(master_accounts_file, merged_transaction_summary_file):
                 master_accounts[row.to] = (int(master_accounts[row.to][0]) + int(row.cents), master_accounts[row.to][1])
         elif row.transaction_type == TransactionSummaryKeys.withdraw:
             if row.from_act in master_accounts:
-                if int(master_accounts[row.from_act][0]) > int(row.cents):
+                if int(master_accounts[row.from_act][0]) >= int(row.cents):
                     master_accounts[row.from_act] = (
                         int(master_accounts[row.from_act][0]) - int(row.cents), master_accounts[row.from_act][1])
                 else:
-                    print("Can't transfer more money than account has")
+                    print("Can't withdraw more money than account has")
         elif row.transaction_type == TransactionSummaryKeys.transfer:
             if row.from_act in master_accounts and row.to in master_accounts:
-                if int(master_accounts[row.from_act][0]) > int(row.cents):
+                if int(master_accounts[row.from_act][0]) >= int(row.cents):
                     # Because tuples are immutable it must replace the whole value
                     master_accounts[row.from_act] = (
                         int(master_accounts[row.from_act][0]) - int(row.cents), master_accounts[row.from_act][1])
@@ -58,7 +58,7 @@ def parse_backend(master_accounts_file, merged_transaction_summary_file):
                     master_accounts[row.to] = (
                         int(master_accounts[row.to][0]) + int(row.cents), master_accounts[row.to][1])
                 else:
-                    print("Can't withdraw more money than account has")
+                    print("Can't transfer more money than account has")
         elif row.transaction_type == TransactionSummaryKeys.createacct:
             if row.to not in master_accounts:
                 # Add new account to list
