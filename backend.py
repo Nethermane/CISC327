@@ -63,6 +63,8 @@ def parse_backend(master_accounts_file, merged_transaction_summary_file):
             if row.to not in master_accounts:
                 # Add new account to list
                 master_accounts[row.to] = (0, row.name)
+            else:
+                print('Error: account already exists')
         elif row.transaction_type == TransactionSummaryKeys.deleteacct:
             if row.to in master_accounts:
                 if row.name == master_accounts[row.to][1]:
