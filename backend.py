@@ -7,7 +7,7 @@ from frontend import TransactionSummary, TransactionSummaryKeys
 Overall, the backend takes in the previous day’s master accounts file and then applies all of
 the transactions in the merged transaction summary file to the accounts to produce today’s new
 master accounts file. It also produces a new valid accounts list for tomorrow’s Front End runs,
-as accounts may be added or deleted. The backend is intended to run every, after a full day of
+as accounts may be added or deleted. The backend is intended to run after every full day of
 transactions is complete (this could be done using a script for example).
 '''
 
