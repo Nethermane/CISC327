@@ -11,6 +11,7 @@ as accounts may be added or deleted. The backend is intended to run every, after
 transactions is complete (this could be done using a script for example).
 '''
 
+
 # Takes in the merged transaction summary file and parses it's contents to build a TransactionSummary object to return.
 def parse_to_summary_file(file: str):
     summary = TransactionSummary()
@@ -23,6 +24,7 @@ def parse_to_summary_file(file: str):
                             transaction_row[3], transaction_row[4])
     return summary
 
+
 # Takes in the old master accounts file and parses it's contents, making a dictionary of accounts which is returned
 def parse_master_account_file(file: str):
     accounts = {}
@@ -32,13 +34,22 @@ def parse_master_account_file(file: str):
             accounts[account_row[0]] = (account_row[1], account_row[2])  # number, balance, name
     return accounts
 
-# Writes the contents of the accounts dictionary (parameter) to the new master accounts file (filename passed in). 
+
+# Writes the contents of the accounts dictionary (parameter) to the new master accounts file (filename passed in).
 def write_master_account_file(file: str, accounts):
     with open(file, 'w') as fp:
         fp.writelines(
             [key + " " + str(acct[0]) + " " + str(acct[1]) + "\n" for key, acct in reversed(sorted(accounts.items()))])
 
-# Takes in the old master accounts file and merged transaction summary file, and calls the function to parse them. 
+
+# Writes the new accounts file
+def write_new_valid_accounts_file(accounts):
+    with open("valid_accounts.txt", 'w') as fp:
+        fp.writelines([key + "\n" for key, acct in reversed(sorted(accounts.items()))])
+        fp.write('0000000\n')
+
+
+# Takes in the old master accounts file and merged transaction summary file, and calls the function to parse them.
 # Then, for each transaction, the transaction type is checked to determine the action needed to appropriately update 
 # the master accounts. write_master_account_file is called, being passed the path to the old master accounts file, and
 # the contents to be written to the new master accounts file. 
@@ -84,8 +95,10 @@ def parse_backend(master_accounts_file, merged_transaction_summary_file):
                 else:
                     print("Account name didn't match delete command")
     write_master_account_file(master_accounts_file, master_accounts)
+    write_new_valid_accounts_file(master_accounts)
 
-# Calls parse_backend, passing in the paths to the merged transaction summary file and the old master accounts file. 
+
+# Calls parse_backend, passing in the paths to the merged transaction summary file and the old master accounts file.
 def main():
     parse_backend(os.path.normpath(sys.argv[1]), os.path.normpath(sys.argv[2]))
 
