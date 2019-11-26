@@ -12,8 +12,9 @@ def test_create_p1(capsys):
     helper(capsys,
            merged_transaction_summary=['NEW 1234567 000 0000000 nam\nEOS 0000000 000 0000000 ***'],
            master_accounts_list=[],
-           expected_output_transactions=['1234567 0 nam'],
-           expected_tail_of_terminal_output=[]
+           expected_output_master_accounts_file=['1234567 0 nam'],
+           expected_tail_of_terminal_output=[],
+           expected_valid_accounts_file=['1234567', '0000000']
            )
 
 
@@ -21,8 +22,9 @@ def test_create_p2(capsys):
     helper(capsys,
            merged_transaction_summary=['NEW 1234567 000 nam nam\nEOS 0000000 000 0000000 ***'],
            master_accounts_list=['1234567 0 nam'],
-           expected_output_transactions=['1234567 0 nam'],
-           expected_tail_of_terminal_output=['Error: account already exists']
+           expected_output_master_accounts_file=['1234567 0 nam'],
+           expected_tail_of_terminal_output=['Error: account #: 1234567 already exists'],
+           expected_valid_accounts_file=['1234567', '0000000']
            )
 
 
@@ -30,8 +32,9 @@ def test_withdraw_P1(capsys):
     helper(capsys,
            merged_transaction_summary=[],
            master_accounts_list=[],
-           expected_output_transactions=[],
-           expected_tail_of_terminal_output=[]
+           expected_output_master_accounts_file=[],
+           expected_tail_of_terminal_output=[],
+           expected_valid_accounts_file=['0000000']
            )
 
 
@@ -39,8 +42,9 @@ def test_withdraw_P2(capsys):
     helper(capsys,
            merged_transaction_summary=['WDR 0000000 1000 7654321 nam'],
            master_accounts_list=['1234567 1000 nam'],
-           expected_output_transactions=['1234567 1000 nam'],
-           expected_tail_of_terminal_output=[]
+           expected_output_master_accounts_file=['1234567 1000 nam'],
+           expected_tail_of_terminal_output=[],
+           expected_valid_accounts_file=['1234567', '0000000']
            )
 
 
@@ -48,8 +52,9 @@ def test_withdraw_P3(capsys):
     helper(capsys,
            merged_transaction_summary=['WDR 0000000 1000 1234567 *nam'],
            master_accounts_list=['1234567 1000 nam'],
-           expected_output_transactions=['1234567 0 nam'],
-           expected_tail_of_terminal_output=[]
+           expected_output_master_accounts_file=['1234567 0 nam'],
+           expected_tail_of_terminal_output=[],
+           expected_valid_accounts_file=['1234567', '0000000']
            )
 
 
@@ -57,16 +62,19 @@ def test_withdraw_P4(capsys):
     helper(capsys,
            merged_transaction_summary=['WDR 0000000 1000 1234567 nam'],
            master_accounts_list=['1234567 100 nam'],
-           expected_output_transactions=['1234567 100 nam'],
-           expected_tail_of_terminal_output=["Can't withdraw more money than account has"]
+           expected_output_master_accounts_file=['1234567 100 nam'],
+           expected_tail_of_terminal_output=[
+               'Error: withdrawing 1000 would cause a negative balance in account #: 1234567'],
+           expected_valid_accounts_file=['1234567', '0000000']
            )
 
 
 def helper(capsys,
            merged_transaction_summary,
            master_accounts_list,
-           expected_output_transactions,
-           expected_tail_of_terminal_output
+           expected_output_master_accounts_file,
+           expected_tail_of_terminal_output,
+           expected_valid_accounts_file
            ):
     """Helper function for testing
 
@@ -112,8 +120,11 @@ def helper(capsys,
     with open(master_accounts_file, 'r') as of:
         content = of.read().splitlines()
         for ind in range(len(content)):
-            assert content[ind] == expected_output_transactions[ind]
-
+            assert content[ind] == expected_output_master_accounts_file[ind]
+    with open('valid_accounts.txt', 'r') as of:
+        content = of.read().splitlines()
+        for ind in range(len(content)):
+            assert content[ind] == expected_valid_accounts_file[ind]
     # clean up
     os.close(temp_fd)
     os.remove(temp_file)

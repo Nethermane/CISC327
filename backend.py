@@ -50,9 +50,9 @@ def write_new_valid_accounts_file(accounts):
 
 
 # Takes in the old master accounts file and merged transaction summary file, and calls the function to parse them.
-# Then, for each transaction, the transaction type is checked to determine the action needed to appropriately update 
+# Then, for each transaction, the transaction type is checked to determine the action needed to appropriately update
 # the master accounts. write_master_account_file is called, being passed the path to the old master accounts file, and
-# the contents to be written to the new master accounts file. 
+# the contents to be written to the new master accounts file.
 def parse_backend(master_accounts_file, merged_transaction_summary_file):
     transaction_summary = parse_to_summary_file(merged_transaction_summary_file)
     master_accounts = parse_master_account_file(master_accounts_file)
@@ -67,7 +67,7 @@ def parse_backend(master_accounts_file, merged_transaction_summary_file):
                     master_accounts[row.from_act] = (
                         int(master_accounts[row.from_act][0]) - int(row.cents), master_accounts[row.from_act][1])
                 else:
-                    print("Can't withdraw more money than account has")
+                    print("Error: withdrawing", row.cents, 'would cause a negative balance in account #:', row.from_act)
         elif row.transaction_type == TransactionSummaryKeys.transfer:
             if row.from_act in master_accounts and row.to in master_accounts:
                 if int(master_accounts[row.from_act][0]) >= int(row.cents):
@@ -78,22 +78,22 @@ def parse_backend(master_accounts_file, merged_transaction_summary_file):
                     master_accounts[row.to] = (
                         int(master_accounts[row.to][0]) + int(row.cents), master_accounts[row.to][1])
                 else:
-                    print("Can't transfer more money than account has")
+                    print("Error: transferring", row.cents, 'would cause a negative balance in account #:',row.from_act)
         elif row.transaction_type == TransactionSummaryKeys.createacct:
             if row.to not in master_accounts:
                 # Add new account to list
                 master_accounts[row.to] = (0, row.name)
             else:
-                print('Error: account already exists')
+                print('Error: account #:', row.to, 'already exists')
         elif row.transaction_type == TransactionSummaryKeys.deleteacct:
             if row.to in master_accounts:
                 if row.name == master_accounts[row.to][1]:
                     if int(master_accounts[row.cents][0]) == 0:
                         del master_accounts[row.to]
                     else:
-                        print("Can't delete an account with a non-zero balance")
+                        print("Can't delete account #:", row.to, "with a non-zero balance")
                 else:
-                    print("Account name didn't match delete command")
+                    print("Account name'", row.name, "'didn't match account number")
     write_master_account_file(master_accounts_file, master_accounts)
     write_new_valid_accounts_file(master_accounts)
 
