@@ -7,9 +7,9 @@ import tempfile
 import backend
 import frontend
 
-
+# simulates 3 separate sessions for 1 day
 def main():
-    for i in range(3):
+    for i in range(3): # run the front end instance 3 times with appropriate inputs
         # prepare program parameters
         print('Front end instance', i)
         sys.argv = [
@@ -19,8 +19,8 @@ def main():
         frontend.main()
     temp_fd, temp_file = tempfile.mkstemp()
     merged_transaction_file = temp_file
-    transaction_files = glob.glob("new_transactions/*.txt")
-    with open(merged_transaction_file, 'w') as wf:
+    transaction_files = glob.glob("new_transactions/*.txt") # list of transaction summary files
+    with open(merged_transaction_file, 'w') as wf: # create merged txn summary file
         for file in transaction_files:
             with open(file, 'r') as tf:
                 for line in tf:
@@ -29,8 +29,7 @@ def main():
         wf.write('EOS 0000000 000 0000000 ***')
     for transaction in transaction_files:
         os.remove(transaction)
-    with open(merged_transaction_file, 'r') as rf:
-        print(rf.readlines())
+    # run backend with updated files
     sys.argv = [
         'backend.py',
         'master_accounts.txt',
