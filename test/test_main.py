@@ -171,10 +171,10 @@ def test_r4_t1(capsys):
     helper(
         capsys=capsys,
         terminal_input=[
-            'login', 'machine', 'logout', 'quit'
+            'login', 'machine', 'logout'
         ],
         input_valid_accounts=[],
-        expected_tail_of_terminal_output=['Successfully logged out', 'Command: '],
+        expected_tail_of_terminal_output=['Successfully logged out'],
         expected_output_transactions=['EOS 0000000 000 0000000 ***']
     )
 
@@ -184,10 +184,10 @@ def test_r4_t2(capsys):
     helper(
         capsys=capsys,
         terminal_input=[
-            'login', 'agent', 'logout', 'quit'
+            'login', 'agent', 'logout'
         ],
         input_valid_accounts=[],
-        expected_tail_of_terminal_output=['Successfully logged out', 'Command: '],
+        expected_tail_of_terminal_output=['Successfully logged out'],
         expected_output_transactions=["EOS 0000000 000 0000000 ***"]
     )
 
@@ -360,11 +360,10 @@ def test_r8_t5(capsys):
     # Positive test case for a valid account name
     helper(
         capsys=capsys,
-        terminal_input=['login', 'agent', 'createacct', '1234567', 'abc', 'logout', 'quit'],
+        terminal_input=['login', 'agent', 'createacct', '1234567', 'abc', 'logout'],
         input_valid_accounts=[],
         expected_tail_of_terminal_output=['Command: ',
-                                          'Successfully logged out',
-                                          'Command: '],
+                                          'Successfully logged out'],
         expected_output_transactions=['NEW 1234567 000 0000000 abc', 'EOS 0000000 000 0000000 ***']
     )
 
@@ -515,11 +514,10 @@ def test_r12_t5(capsys):
         capsys=capsys,
         terminal_input=['login', 'machine', 'deposit', '1234567', '200000',
                         'deposit', '1234567', '200000',
-                        'deposit', '1234567', '100001', 'q', 'logout', 'quit'],
+                        'deposit', '1234567', '100001', 'q', 'logout'],
         input_valid_accounts=['1234567', '0000000'],
         expected_tail_of_terminal_output=['Error: deposit over limit', 'Amount(cents): ', 'Command: ',
-                                          'Successfully logged out',
-                                          'Command: '],
+                                          'Successfully logged out'],
         expected_output_transactions=['DEP 1234567 200000 0000000 ***',
                                       'DEP 1234567 200000 0000000 ***',
                                       'EOS 0000000 000 0000000 ***']
@@ -603,10 +601,10 @@ def test_r15_t1(capsys):
                         'withdraw', '1234567', '100000',
                         'withdraw', '1234567', '100000',
                         'withdraw', '1234567', '100000',
-                        'withdraw', '1234567', '1', 'q', 'logout', 'quit'],
+                        'withdraw', '1234567', '1', 'q', 'logout'],
         input_valid_accounts=['1234567', '0000000'],
         expected_tail_of_terminal_output=['Error: withdraw over limit', 'Amount(cents): ', 'Command: ',
-                                          'Successfully logged out', 'Command: '],
+                                          'Successfully logged out'],
         expected_output_transactions=['WDR 0000000 100000 1234567 ***',
                                       'WDR 0000000 100000 1234567 ***',
                                       'WDR 0000000 100000 1234567 ***',
@@ -672,7 +670,7 @@ def test_r17_t2(capsys):
     # Atm transfers should work for <=$10000
     helper(
         capsys=capsys,
-        terminal_input=['login', 'machine', 'transfer', '1234566', '1234567', '1000000', 'logout', 'quit'],
+        terminal_input=['login', 'machine', 'transfer', '1234566', '1234567', '1000000', 'logout'],
         input_valid_accounts=['1234567', '1234566'],
         expected_tail_of_terminal_output=['Command: ',
                                           'Select session type (machine or agent): ',
@@ -683,8 +681,7 @@ def test_r17_t2(capsys):
                                           'Amount(cents): ',
                                           'Transfer successful',
                                           'Command: ',
-                                          'Successfully logged out',
-                                          'Command: '],
+                                          'Successfully logged out'],
         expected_output_transactions=['XFR 1234567 1000000 1234566 ***', 'EOS 0000000 000 0000000 ***']
     )
 
@@ -720,7 +717,7 @@ def test_r17_t5(capsys):
     # Teller should be able to transfer <= 999,999.99
     helper(
         capsys=capsys,
-        terminal_input=['login', 'agent', 'transfer', '1234566', '1234567', '99999999', 'logout', 'quit'],
+        terminal_input=['login', 'agent', 'transfer', '1234566', '1234567', '99999999', 'logout'],
         input_valid_accounts=['1234567', '1234566'],
         expected_tail_of_terminal_output=['Command: ',
                                           'Select session type (machine or agent): ',
@@ -731,8 +728,7 @@ def test_r17_t5(capsys):
                                           'Amount(cents): ',
                                           'Transfer successful',
                                           'Command: ',
-                                          'Successfully logged out',
-                                          'Command: '],
+                                          'Successfully logged out'],
         expected_output_transactions=['XFR 1234567 99999999 1234566 ***', 'EOS 0000000 000 0000000 ***']
     )
 

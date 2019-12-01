@@ -258,7 +258,8 @@ class FrontEndInstance:
                     self.login()
                 # logout
                 elif parsed_command == self.Commands.logout:
-                    self.logout()
+                    if self.logout():
+                        return
                 # createacct
                 elif parsed_command == self.Commands.createacct:
                     self.create_account()
@@ -317,6 +318,7 @@ class FrontEndInstance:
         self.accounts_list.clear()  # Clear the accounts list (login populates it again if logged in again)
         self.user_status = self.UserState.idle  # Actually set the session to logged out
         print(FrontEndInstance.successful_logout)
+        return True
 
     def create_account(self) -> None:
         """

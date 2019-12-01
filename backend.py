@@ -21,7 +21,7 @@ def parse_to_summary_file(file: str):
             if transaction_row[0] == TransactionSummaryKeys.end_of_file:
                 return summary
             summary.add_row(TransactionSummaryKeys(transaction_row[0]), transaction_row[1], transaction_row[2],
-                            transaction_row[3], transaction_row[4])
+                            transaction_row[3], ' '.join(transaction_row[4:]))
     return summary
 
 
@@ -31,7 +31,7 @@ def parse_master_account_file(file: str):
     with open(file, 'r') as fp:
         for line in fp:
             account_row = line.replace('\n', '').split(' ')
-            accounts[account_row[0]] = (account_row[1], account_row[2])  # number, balance, name
+            accounts[account_row[0]] = (account_row[1], ' '.join(account_row[2:]))  # number, balance, name
     return accounts
 
 
