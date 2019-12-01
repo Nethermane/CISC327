@@ -30,6 +30,7 @@ def main():
         'login', 'machine', 'transfer', '1111111', '1234567', '1700', 'logout',
         'login', 'machine', 'transfer', '2222222', '1234567', '500000', 'logout',
         'login', 'machine', 'transfer', '3333333', '1234567', '32300', 'logout']
+    
     # run daily script for each day detailed above
     sys.stdin = io.StringIO(
         '\n'.join(days))
