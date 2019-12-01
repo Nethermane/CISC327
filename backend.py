@@ -88,7 +88,7 @@ def parse_backend(master_accounts_file, merged_transaction_summary_file):
         elif row.transaction_type == TransactionSummaryKeys.deleteacct:
             if row.to in master_accounts:
                 if row.name == master_accounts[row.to][1]:
-                    if int(master_accounts[row.cents][0]) == 0:
+                    if int(master_accounts[row.to][0]) == 0:
                         del master_accounts[row.to]
                     else:
                         print("Can't delete account #:", row.to, "with a non-zero balance")

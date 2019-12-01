@@ -9,14 +9,6 @@ import frontend
 
 
 def main():
-    with open('valid_accounts.txt', 'w') as wf:
-        wf.write('0000000')
-    open('master_accounts.txt', 'w').close()
-    day1 = ['login', 'agent', 'createacct', '1111111', 'Acct 1', 'logout',
-            'login', 'agent', 'createacct', '2222222', 'Acct 2', 'logout',
-            'login', 'agent', 'createacct', '3333333', 'Acct 3', 'logout']
-    sys.stdin = io.StringIO(
-        '\n'.join(day1))
     for i in range(3):
         # prepare program parameters
         print('Front end instance', i)
@@ -35,6 +27,8 @@ def main():
                     if line != 'EOS 0000000 000 0000000 ***':
                         wf.write(line)
         wf.write('EOS 0000000 000 0000000 ***')
+    for transaction in transaction_files:
+        os.remove(transaction)
     with open(merged_transaction_file, 'r') as rf:
         print(rf.readlines())
     sys.argv = [
