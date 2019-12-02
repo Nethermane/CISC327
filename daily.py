@@ -1,5 +1,4 @@
 import glob
-import io
 import os
 import sys
 import tempfile
@@ -7,11 +6,11 @@ import tempfile
 import backend
 import frontend
 
+
 # simulates 3 separate sessions for 1 day
-def main():
-    for i in range(3): # run the front end instance 3 times with appropriate inputs
+def main(number_of_sessions=3):
+    for i in range(number_of_sessions):  # run the front end instance 3 times with appropriate inputs
         # prepare program parameters
-        print('Front end instance', i)
         sys.argv = [
             'frontend.py',
             'valid_accounts.txt',
@@ -19,8 +18,8 @@ def main():
         frontend.main()
     temp_fd, temp_file = tempfile.mkstemp()
     merged_transaction_file = temp_file
-    transaction_files = glob.glob("new_transactions/*.txt") # list of transaction summary files
-    with open(merged_transaction_file, 'w') as wf: # create merged txn summary file
+    transaction_files = glob.glob("new_transactions/*.txt")  # list of transaction summary files
+    with open(merged_transaction_file, 'w') as wf:  # create merged txn summary file
         for file in transaction_files:
             with open(file, 'r') as tf:
                 for line in tf:
